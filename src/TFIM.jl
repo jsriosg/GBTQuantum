@@ -67,3 +67,21 @@ end
 function exact_ground_energy(H::TFIMHamiltonian)
     return eigmin(exact_hamiltonian(H))
 end
+
+"""
+    exact_ground_state(H)
+
+Return the exact ground-state energy and normalized ground-state
+eigenvector for a small TFIM system.
+"""
+function exact_ground_state(H::TFIMHamiltonian)
+
+    F = eigen(exact_hamiltonian(H))
+
+    idx = argmin(F.values)
+
+    return (
+        energy = F.values[idx],
+        state = F.vectors[:, idx],
+    )
+end

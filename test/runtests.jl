@@ -196,3 +196,93 @@ end
         0.0 .<= result.hilbert_coverage .<= 1.0
     )
 end
+
+@testset "Spin observables" begin
+
+    # --------------------------------------------------------
+    # Basic longitudinal magnetization
+    # --------------------------------------------------------
+
+    x_up = Int8[1, 1, 1, 1]
+    x_down = Int8[-1, -1, -1, -1]
+    x_zero = Int8[1, -1, 1, -1]
+
+    @test magnetization_z(x_up) ≈ 1.0
+    @test magnetization_z(x_down) ≈ -1.0
+    @test magnetization_z(x_zero) ≈ 0.0
+
+    @test abs_magnetization_z(x_up) ≈ 1.0
+    @test abs_magnetization_z(x_down) ≈ 1.0
+    @test abs_magnetization_z(x_zero) ≈ 0.0
+
+    @test magnetization_z2(x_up) ≈ 1.0
+    @test magnetization_z2(x_down) ≈ 1.0
+    @test magnetization_z2(x_zero) ≈ 0.0
+
+
+    # --------------------------------------------------------
+    # Weighted compressed-sample observables
+    # --------------------------------------------------------
+
+    states = Int8[
+         1  1  1  1;
+        -1 -1 -1 -1;
+         1 -1  1 -1
+    ]
+
+    counts = [2, 1, 1]
+
+    obs = sampled_diagonal_observables(states, counts)
+
+    # Weighted distribution:
+    #
+    # state        m_z       weight
+    # ++++          1          2
+    # ----         -1          1
+    # +-+-          0          1
+    #
+    # <m_z>   = (2 - 1)/4 = 1/4
+    # <|m_z|> = (2 + 1)/4 = 3/4
+    # <m_z²>  = (2 + 1)/4 = 3/4
+
+    @test obs.mz ≈ 0.25
+    @test obs.abs_mz ≈ 0.75
+    @test obs.mz2 ≈ 0.75
+
+
+    # --------------------------------------------------------
+    # Uniform wavefunction transverse magnetization
+    # --------------------------------------------------------
+
+    model = LogGBState(use_phase=false)
+
+    x = Int8[1, -1, 1, -1]
+    x_original = copy(x)
+
+    mx = local_magnetization_x(model, x)
+
+    # For a uniform wavefunction:
+    #
+    # ψ(x^i)/ψ(x) = 1
+    #
+    # for every spin flip, therefore <σ_x> = 1.
+
+    @test mx ≈ 1.0 + 0im
+
+    # The observable must restore the configuration.
+    @test x == x_original
+
+
+    # --------------------------------------------------------
+    # Sampled transverse magnetization
+    # --------------------------------------------------------
+
+    mx_sampled = sampled_magnetization_x(
+        model,
+        states,
+        counts,
+    )
+
+    @test mx_sampled ≈ 1.0 + 0im
+
+end

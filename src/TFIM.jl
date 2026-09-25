@@ -37,21 +37,33 @@ function local_energy!(H::TFIMHamiltonian,
 end
 
 # Dense exact diagonalization is only a validation tool for small systems.
-function exact_ground_energy(H::TFIMHamiltonian)
-    H.N <= 14 || error("Dense exact diagonalization is restricted to N <= 14")
+function exact_hamiltonian(H::TFIMHamiltonian)
+    H.N <= 14 ||
+        error("Dense exact diagonalization is restricted to N <= 14")
+
     d = 1 << H.N
     M = zeros(Float64, d, d)
     x = Vector{Int8}(undef, H.N)
 
-    @inbounds for s in 0:(d-1)
+    @inbounds for s in 0:(d - 1)
+
         for i in 1:H.N
-            x[i] = ((s >> (i-1)) & 1) == 1 ? Int8(1) : Int8(-1)
+            x[i] =
+                ((s >> (i - 1)) & 1) == 1 ?
+                Int8(1) : Int8(-1)
         end
-        M[s+1,s+1] = diagonal(H,x)
+
+        M[s + 1, s + 1] = diagonal(H, x)
+
         for i in 1:H.N
-            sp = s ⊻ (1 << (i-1))
-            M[sp+1,s+1] = -H.h
+            sp = s ⊻ (1 << (i - 1))
+            M[sp + 1, s + 1] = -H.h
         end
     end
-    return eigmin(Symmetric(M))
+
+    return Symmetric(M)
+end
+
+function exact_ground_energy(H::TFIMHamiltonian)
+    return eigmin(exact_hamiltonian(H))
 end

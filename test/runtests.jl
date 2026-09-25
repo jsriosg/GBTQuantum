@@ -286,3 +286,79 @@ end
     @test mx_sampled ≈ 1.0 + 0im
 
 end
+
+@testset "Exact model observables" begin
+
+    H = TFIMHamiltonian(
+        4;
+        J=1.0,
+        h=1.0,
+        periodic=true,
+    )
+
+    model = LogGBState(use_phase=false)
+
+    obs = exact_model_observables(model, H)
+
+    @test obs.nstates == 16
+
+    @test isapprox(obs.mz, 0.0; atol=1e-12)
+    @test isapprox(obs.abs_mz, 0.375; atol=1e-12)
+    @test isapprox(obs.mz2, 0.25; atol=1e-12)
+
+    @test isapprox(real(obs.mx), 1.0; atol=1e-12)
+    @test isapprox(imag(obs.mx), 0.0; atol=1e-12)
+end
+
+@testset "Exact ground-state observables" begin
+
+    N = 4
+    J = 1.0
+    h = 1.0
+
+    H = TFIMHamiltonian(
+        N;
+        J=J,
+        h=h,
+        periodic=true,
+    )
+
+    obs = exact_ground_observables(H)
+
+    @test obs.nstates == 16
+    @test isapprox(obs.mz, 0.0; atol=1e-12)
+
+    @test 0.0 <= obs.abs_mz <= 1.0
+    @test 0.0 <= obs.mz2 <= 1.0
+    @test 0.0 <= obs.mx <= 1.0
+
+    # Hellmann-Feynman check.
+    ε = 1e-5
+
+    Hp = TFIMHamiltonian(
+        N;
+        J=J,
+        h=h + ε,
+        periodic=true,
+    )
+
+    Hm = TFIMHamiltonian(
+        N;
+        J=J,
+        h=h - ε,
+        periodic=true,
+    )
+
+    dEdh =
+        (exact_ground_energy(Hp) -
+         exact_ground_energy(Hm)) / (2ε)
+
+    mx_HF = -dEdh / N
+
+    @test isapprox(
+        obs.mx,
+        mx_HF;
+        rtol=1e-7,
+        atol=1e-9,
+    )
+end

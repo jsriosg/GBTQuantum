@@ -140,3 +140,161 @@ function sampled_magnetization_x(
 
     return mx / total_weight
 end
+
+"""
+    exact_model_observables(model, H)
+
+Compute exact expectation values of selected spin observables for the
+wavefunction represented by `model`, by enumerating the complete Hilbert
+space.
+
+This is a validation routine for small systems only.
+
+Returns:
+    mz      = <m_z>
+    abs_mz  = <|m_z|>
+    mz2     = <m_z^2>
+    mx      = <m_x>
+    nstates = number of enumerated basis states
+"""
+function exact_model_observables(
+    model::LogGBState,
+    H::TFIMHamiltonian,
+)
+    N = H.N
+
+    N < 64 || throw(
+        ArgumentError("exact_model_observables requires N < 64")
+    )
+
+    nstates = 1 << N
+
+    states = Matrix{Int8}(undef, nstates, N)
+    logweights = Vector{Float64}(undef, nstates)
+
+    # ---------------------------------------------------------
+    # Enumerate the Hilbert space and evaluate |ψ(x)|².
+    # ---------------------------------------------------------
+
+    @inbounds for k in 0:(nstates - 1)
+        row = k + 1
+
+        for j in 1:N
+            bit = (k >> (j - 1)) & 1
+            states[row, j] =
+                bit == 1 ? Int8(1) : Int8(-1)
+        end
+
+        x = @view states[row, :]
+
+        logweights[row] =
+            2.0 * logamplitude(model, x)
+    end
+
+    # Stable normalization of |ψ|².
+    maxlogweight = maximum(logweights)
+
+    weights = Vector{Float64}(undef, nstates)
+
+    Z = 0.0
+
+    @inbounds @simd for k in 1:nstates
+        w = exp(logweights[k] - maxlogweight)
+        weights[k] = w
+        Z += w
+    end
+
+    # ---------------------------------------------------------
+    # Observable expectation values.
+    # ---------------------------------------------------------
+
+    mz = 0.0
+    abs_mz = 0.0
+    mz2 = 0.0
+    mx = 0.0 + 0.0im
+
+    @inbounds for k in 1:nstates
+        x = @view states[k, :]
+        p = weights[k] / Z
+
+        m = magnetization_z(x)
+
+        mz     += p * m
+        abs_mz += p * abs(m)
+        mz2    += p * m * m
+
+        mx += p * local_magnetization_x(model, x)
+    end
+
+    return (
+        mz = mz,
+        abs_mz = abs_mz,
+        mz2 = mz2,
+        mx = mx,
+        nstates = nstates,
+    )
+end
+
+"""
+    exact_ground_observables(H)
+
+Compute selected observables directly from the exact TFIM ground-state
+eigenvector.
+
+This is used only for small-system validation.
+"""
+function exact_ground_observables(H::TFIMHamiltonian)
+
+    gs = exact_ground_state(H)
+
+    N = H.N
+    nstates = 1 << N
+
+    ψ = gs.state
+
+    mz = 0.0
+    abs_mz = 0.0
+    mz2 = 0.0
+    mx = 0.0
+
+    x = Vector{Int8}(undef, N)
+
+    @inbounds for s in 0:(nstates - 1)
+
+        row = s + 1
+        p = abs2(ψ[row])
+
+        msum = 0
+
+        for i in 1:N
+            spin =
+                ((s >> (i - 1)) & 1) == 1 ? 1 : -1
+
+            x[i] = Int8(spin)
+            msum += spin
+        end
+
+        m = msum / N
+
+        mz     += p * m
+        abs_mz += p * abs(m)
+        mz2    += p * m * m
+
+        # <σ_i^x> connects s with the configuration
+        # obtained by flipping spin i.
+        for i in 1:N
+            sp = s ⊻ (1 << (i - 1))
+
+            mx += real(conj(ψ[row]) * ψ[sp + 1]) / N
+        end
+    end
+
+    return (
+        energy = gs.energy,
+        mz = mz,
+        abs_mz = abs_mz,
+        mz2 = mz2,
+        mx = mx,
+        nstates = nstates,
+    )
+end

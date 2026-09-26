@@ -529,6 +529,213 @@ function validation_observables(
 end
 
 """
+    validation_distribution(model, H;
+                            nsamples=100_000,
+                            burn_in_sweeps=500,
+                            thinning_sweeps=1,
+                            seed=13579)
+
+For small systems, compare the exact probability distribution represented
+by `model`,
+
+    p(x) = |ψ(x)|² / Σₓ |ψ(x)|²,
+
+against the empirical distribution produced by an independent sequential
+Metropolis chain.
+
+Returns state-resolved probabilities, magnetization-resolved probabilities,
+and distribution-distance diagnostics.
+"""
+function validation_distribution(
+    model::LogGBState,
+    H::TFIMHamiltonian;
+    nsamples::Int = 100_000,
+    burn_in_sweeps::Int = 500,
+    thinning_sweeps::Int = 1,
+    seed::Int = 13579,
+)
+    nsamples > 0 ||
+        throw(ArgumentError("nsamples must be positive"))
+
+    burn_in_sweeps >= 0 ||
+        throw(ArgumentError("burn_in_sweeps must be non-negative"))
+
+    thinning_sweeps >= 1 ||
+        throw(ArgumentError("thinning_sweeps must be at least 1"))
+
+    N = H.N
+
+    # This is explicitly a small-system diagnostic.
+    N <= 20 ||
+        throw(ArgumentError(
+            "validation_distribution is restricted to N <= 20"
+        ))
+
+    nstates = 1 << N
+
+    # =========================================================
+    # Exact GBT probability distribution
+    # =========================================================
+
+    logweights = Vector{Float64}(undef, nstates)
+    state = Vector{Int8}(undef, N)
+
+    @inbounds for s in 0:(nstates - 1)
+
+        for j in 1:N
+            state[j] =
+                ((s >> (j - 1)) & 1) == 1 ?
+                Int8(1) : Int8(-1)
+        end
+
+        logweights[s + 1] =
+            2.0 * logamplitude(model, state)
+    end
+
+    maxlogweight = maximum(logweights)
+
+    exact_prob = Vector{Float64}(undef, nstates)
+
+    Z = 0.0
+
+    @inbounds @simd for i in eachindex(logweights)
+        p = exp(logweights[i] - maxlogweight)
+        exact_prob[i] = p
+        Z += p
+    end
+
+    exact_prob ./= Z
+
+    # =========================================================
+    # Independent Markov chain
+    # =========================================================
+
+    rng = MersenneTwister(seed)
+
+    @inbounds for j in 1:N
+        state[j] =
+            rand(rng, Bool) ? Int8(1) : Int8(-1)
+    end
+
+    currentA = logamplitude(model, state)
+
+    function lazy_step!(currentA)
+
+        if rand(rng) < 0.5
+            return currentA
+        end
+
+        _, newA = metropolis_step!(
+            rng,
+            model,
+            state,
+            currentA,
+        )
+
+        return newA
+    end
+
+    # Burn-in
+    for _ in 1:burn_in_sweeps
+        for _ in 1:N
+            currentA = lazy_step!(currentA)
+        end
+    end
+
+    counts = zeros(Int, nstates)
+
+    # =========================================================
+    # Sampling
+    # =========================================================
+
+    @inbounds for _ in 1:nsamples
+
+        for _ in 1:thinning_sweeps
+            for _ in 1:N
+                currentA = lazy_step!(currentA)
+            end
+        end
+
+        # Convert {-1,+1} spin configuration to binary index.
+        key = 0
+
+        for j in 1:N
+            if state[j] > 0
+                key |= 1 << (j - 1)
+            end
+        end
+
+        counts[key + 1] += 1
+    end
+
+    sampled_prob = counts ./ nsamples
+
+    # =========================================================
+    # State-resolved distances
+    # =========================================================
+
+    total_variation =
+        0.5 * sum(abs.(sampled_prob .- exact_prob))
+
+    l1_distance =
+        sum(abs.(sampled_prob .- exact_prob))
+
+    max_abs_error =
+        maximum(abs.(sampled_prob .- exact_prob))
+
+    # =========================================================
+    # Magnetization-resolved distribution
+    #
+    # For N spins:
+    #
+    # n_up = 0,...,N
+    # mz   = (2*n_up - N)/N
+    #
+    # Therefore there are N+1 magnetization sectors.
+    # =========================================================
+
+    exact_mag_prob = zeros(Float64, N + 1)
+    sampled_mag_prob = zeros(Float64, N + 1)
+
+    @inbounds for s in 0:(nstates - 1)
+
+        # Number of +1 spins.
+        nup = count_ones(UInt(s))
+
+        exact_mag_prob[nup + 1] +=
+            exact_prob[s + 1]
+
+        sampled_mag_prob[nup + 1] +=
+            sampled_prob[s + 1]
+    end
+
+    magnetizations =
+        [(2nup - N) / N for nup in 0:N]
+
+    magnetization_tv =
+        0.5 *
+        sum(abs.(sampled_mag_prob .- exact_mag_prob))
+
+    return (
+        exact_prob = exact_prob,
+        sampled_prob = sampled_prob,
+        counts = counts,
+
+        total_variation = total_variation,
+        l1_distance = l1_distance,
+        max_abs_error = max_abs_error,
+
+        magnetizations = magnetizations,
+        exact_magnetization_prob = exact_mag_prob,
+        sampled_magnetization_prob = sampled_mag_prob,
+        magnetization_tv = magnetization_tv,
+
+        nsamples = nsamples,
+        nstates = nstates,
+    )
+end
+
+"""
     exact_model_energy(model, H)
 
 Compute the exact Rayleigh quotient of `model` by enumerating the complete

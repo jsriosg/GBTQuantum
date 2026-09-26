@@ -407,3 +407,50 @@ end
     @test length(obs.mz2_samples) == 20_000
     @test length(obs.mx_samples) == 20_000
 end
+
+@testset "VMC distribution validation" begin
+
+    H = TFIMHamiltonian(
+        4;
+        J=1.0,
+        h=1.0,
+        periodic=true,
+    )
+
+    model = LogGBState(use_phase=false)
+
+    dist = validation_distribution(
+        model,
+        H;
+        nsamples=50_000,
+        burn_in_sweeps=100,
+        thinning_sweeps=1,
+        seed=112233,
+    )
+
+    @test dist.nstates == 16
+    @test sum(dist.counts) == 50_000
+
+    @test isapprox(
+        sum(dist.exact_prob),
+        1.0;
+        atol=1e-12,
+    )
+
+    @test isapprox(
+        sum(dist.sampled_prob),
+        1.0;
+        atol=1e-12,
+    )
+
+    # Exact uniform distribution.
+    @test all(
+        isapprox.(dist.exact_prob, 1 / 16; atol=1e-12)
+    )
+
+    # MC distribution should approach uniformity.
+    @test dist.total_variation < 0.03
+
+    # Magnetization-sector distribution should also agree.
+    @test dist.magnetization_tv < 0.02
+end

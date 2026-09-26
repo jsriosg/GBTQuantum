@@ -282,6 +282,50 @@ println()
 
 println("=============================================")
 
+# --------------------------------------------------------------
+# validation
+# --------------------------------------------------------------
+
+dist = validation_distribution(
+    result.model,
+    H;
+    nsamples = 100_000,
+    burn_in_sweeps = 500,
+    thinning_sweeps = 1,
+    seed = 13579,
+)
+
+println()
+println("========== DISTRIBUTION VALIDATION ==========")
+
+println("Samples                  = ", dist.nsamples)
+println("Hilbert dimension        = ", dist.nstates)
+println("Total variation distance = ", dist.total_variation)
+println("L1 distance              = ", dist.l1_distance)
+println("Maximum state error      = ", dist.max_abs_error)
+println("Magnetization TV         = ", dist.magnetization_tv)
+
+println()
+println("Magnetization distribution:")
+println()
+
+println("   mz          Exact GBT        VMC         Difference")
+println("-------------------------------------------------------")
+
+for i in eachindex(dist.magnetizations)
+
+    @printf(
+        "%6.2f      %10.6f     %10.6f     %+10.6f\n",
+        dist.magnetizations[i],
+        dist.exact_magnetization_prob[i],
+        dist.sampled_magnetization_prob[i],
+        dist.sampled_magnetization_prob[i] -
+            dist.exact_magnetization_prob[i],
+    )
+end
+
+println("=============================================")
+
 # ---------------------------------------------------------------
 # 1. Exact energy vs boosting iterations
 # ---------------------------------------------------------------

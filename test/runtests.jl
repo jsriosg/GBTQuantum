@@ -169,31 +169,44 @@ end
 
 @testset "Exact training diagnostics" begin
 
-    # Construct using the same small H/model/config conventions
-    # already used by your smoke-training test.
+    H = TFIMHamiltonian(4; J=1.0, h=1.0, periodic=true)
 
-    H = TFIMHamiltonian(4; J=1.0,h=1.0,periodic=true)
     cfg = TrainingConfig(
-        nsamples=32,epochs=5,max_depth=2,eta=0.02,
-        burn_in_sweeps=2,sweeps_per_epoch=1,use_phase=false,
-        exact_diagnostics=true,exact_every=2
+        nsamples=32,
+        epochs=5,
+        max_depth=2,
+        eta=0.02,
+        burn_in_sweeps=2,
+        sweeps_per_epoch=1,
+        use_phase=false,
+        exact_diagnostics=true,
+        exact_every=2,
     )
 
-    result = train(H,cfg)
+    result = train(H, cfg)
 
-    @test length(result.hilbert_coverage) == 5
-    @test length(result.exact_energy) == 5
-    @test length(result.exact_variance) == 5
+    @test length(result.hilbert_coverage) == cfg.epochs
+    @test length(result.cumulative_hilbert_coverage) == cfg.epochs
+    @test length(result.exact_energy) == cfg.epochs
+    @test length(result.exact_variance) == cfg.epochs
 
-    # Diagnostics requested at 1, 2, 4 and final=5.
-    expected_mask = [true, true, false, true, true]
+    @test .!isnan.(result.exact_energy) ==
+          [true, true, false, true, true]
 
-    @test .!isnan.(result.exact_energy) == expected_mask
+    @test .!isnan.(result.exact_variance) ==
+          [true, true, false, true, true]
 
-    @test .!isnan.(result.exact_variance) == expected_mask
+    @test all(0.0 .<= result.hilbert_coverage .<= 1.0)
+    @test all(0.0 .<= result.cumulative_hilbert_coverage .<= 1.0)
 
+    # Cumulative coverage can never decrease.
+    @test all(diff(result.cumulative_hilbert_coverage) .>= 0.0)
+
+    # Everything represented in the current population
+    # must already belong to the cumulative visited set.
     @test all(
-        0.0 .<= result.hilbert_coverage .<= 1.0
+        result.cumulative_hilbert_coverage .>=
+        result.hilbert_coverage
     )
 end
 
@@ -454,20 +467,3 @@ end
     # Magnetization-sector distribution should also agree.
     @test dist.magnetization_tv < 0.02
 end
-
-@test length(result.cumulative_hilbert_coverage) == cfg.epochs
-
-@test all(
-    0.0 .<= result.cumulative_hilbert_coverage .<= 1.0
-)
-
-# Cumulative coverage can never decrease.
-@test all(
-    diff(result.cumulative_hilbert_coverage) .>= 0.0
-)
-
-# Everything in the current population must have been seen.
-@test all(
-    result.cumulative_hilbert_coverage .>=
-    result.hilbert_coverage
-)

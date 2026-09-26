@@ -1,0 +1,468 @@
+
+============================================================
+FROZEN-TARGET RECONSTRUCTION
+N                     = 12
+Hilbert dimension     = 4096
+h                     = 1.0
+Training population   = 256
+Training epochs       = 64
+Training runs / J     = 3
+Resamples/checkpoint  = 30
+Checkpoint epochs     = [1, 4, 8, 16, 32, 64]
+Diagnostic M          = [32, 64, 128, 256, 512, 1024, 2048]
+============================================================
+
+
+============================================================
+J/h = 0.0500
+============================================================
+
+Training trajectory 1/3
+
+  Frozen epoch  1: E=-12.00000000  target RMS=1.7321e-01  PR/H=1.000000
+    M=  32   mean R²p(VMC)=-0.7630   mean R²p(exact-E)=-0.7551
+    M=  64   mean R²p(VMC)=-0.3936   mean R²p(exact-E)=-0.3936
+    M= 128   mean R²p(VMC)=-0.0208   mean R²p(exact-E)=-0.0208
+    M= 256   mean R²p(VMC)=0.1358   mean R²p(exact-E)=0.1358
+    M= 512   mean R²p(VMC)=0.2100   mean R²p(exact-E)=0.2100
+    M=1024   mean R²p(VMC)=0.2399   mean R²p(exact-E)=0.2399
+    M=2048   mean R²p(VMC)=0.2443   mean R²p(exact-E)=0.2443
+
+  Frozen epoch  4: E=-12.00201323  target RMS=1.4902e-01  PR/H=0.999534
+    M=  32   mean R²p(VMC)=-0.7775   mean R²p(exact-E)=-0.7775
+    M=  64   mean R²p(VMC)=-0.4118   mean R²p(exact-E)=-0.4118
+    M= 128   mean R²p(VMC)=-0.0398   mean R²p(exact-E)=-0.0398
+    M= 256   mean R²p(VMC)=0.1611   mean R²p(exact-E)=0.1611
+    M= 512   mean R²p(VMC)=0.2359   mean R²p(exact-E)=0.2359
+    M=1024   mean R²p(VMC)=0.2633   mean R²p(exact-E)=0.2633
+    M=2048   mean R²p(VMC)=0.2811   mean R²p(exact-E)=0.2811
+
+  Frozen epoch  8: E=-12.00361271  target RMS=1.2644e-01  PR/H=0.998762
+    M=  32   mean R²p(VMC)=-0.8417   mean R²p(exact-E)=-0.8417
+    M=  64   mean R²p(VMC)=-0.4083   mean R²p(exact-E)=-0.4083
+    M= 128   mean R²p(VMC)=-0.0215   mean R²p(exact-E)=-0.0215
+    M= 256   mean R²p(VMC)=0.1669   mean R²p(exact-E)=0.1669
+    M= 512   mean R²p(VMC)=0.2399   mean R²p(exact-E)=0.2399
+    M=1024   mean R²p(VMC)=0.2814   mean R²p(exact-E)=0.2814
+    M=2048   mean R²p(VMC)=0.3232   mean R²p(exact-E)=0.3232
+
+  Frozen epoch 16: E=-12.00579859  target RMS=8.5849e-02  PR/H=0.997215
+    M=  32   mean R²p(VMC)=-0.7723   mean R²p(exact-E)=-0.7723
+    M=  64   mean R²p(VMC)=-0.4246   mean R²p(exact-E)=-0.4246
+    M= 128   mean R²p(VMC)=-0.0792   mean R²p(exact-E)=-0.0792
+    M= 256   mean R²p(VMC)=0.1194   mean R²p(exact-E)=0.1194
+    M= 512   mean R²p(VMC)=0.2142   mean R²p(exact-E)=0.2142
+    M=1024   mean R²p(VMC)=0.2392   mean R²p(exact-E)=0.2392
+    M=2048   mean R²p(VMC)=0.2500   mean R²p(exact-E)=0.2500
+
+  Frozen epoch 32: E=-12.00708061  target RMS=4.5967e-02  PR/H=0.994672
+    M=  32   mean R²p(VMC)=-0.9220   mean R²p(exact-E)=-0.9220
+    M=  64   mean R²p(VMC)=-0.6208   mean R²p(exact-E)=-0.6208
+    M= 128   mean R²p(VMC)=-0.2052   mean R²p(exact-E)=-0.2052
+    M= 256   mean R²p(VMC)=0.0205   mean R²p(exact-E)=0.0205
+    M= 512   mean R²p(VMC)=0.0941   mean R²p(exact-E)=0.0941
+    M=1024   mean R²p(VMC)=0.1489   mean R²p(exact-E)=0.1489
+    M=2048   mean R²p(VMC)=0.1761   mean R²p(exact-E)=0.1761
+
+  Frozen epoch 64: E=-12.00737401  target RMS=2.8806e-02  PR/H=0.992930
+    M=  32   mean R²p(VMC)=-1.0044   mean R²p(exact-E)=-1.0044
+    M=  64   mean R²p(VMC)=-0.7444   mean R²p(exact-E)=-0.7444
+    M= 128   mean R²p(VMC)=-0.3164   mean R²p(exact-E)=-0.3164
+    M= 256   mean R²p(VMC)=-0.1244   mean R²p(exact-E)=-0.1244
+    M= 512   mean R²p(VMC)=-0.0113   mean R²p(exact-E)=-0.0113
+    M=1024   mean R²p(VMC)=0.0325   mean R²p(exact-E)=0.0325
+    M=2048   mean R²p(VMC)=0.0491   mean R²p(exact-E)=0.0491
+
+Training trajectory 2/3
+
+  Frozen epoch  1: E=-12.00000000  target RMS=1.7321e-01  PR/H=1.000000
+    M=  32   mean R²p(VMC)=-0.6122   mean R²p(exact-E)=-0.6143
+    M=  64   mean R²p(VMC)=-0.4101   mean R²p(exact-E)=-0.4114
+    M= 128   mean R²p(VMC)=-0.0321   mean R²p(exact-E)=-0.0321
+    M= 256   mean R²p(VMC)=0.1310   mean R²p(exact-E)=0.1310
+    M= 512   mean R²p(VMC)=0.2172   mean R²p(exact-E)=0.2172
+    M=1024   mean R²p(VMC)=0.2385   mean R²p(exact-E)=0.2385
+    M=2048   mean R²p(VMC)=0.2439   mean R²p(exact-E)=0.2439
+
+  Frozen epoch  4: E=-12.00197322  target RMS=1.4954e-01  PR/H=0.999567
+    M=  32   mean R²p(VMC)=-0.8030   mean R²p(exact-E)=-0.8030
+    M=  64   mean R²p(VMC)=-0.3804   mean R²p(exact-E)=-0.3804
+    M= 128   mean R²p(VMC)=-0.0435   mean R²p(exact-E)=-0.0435
+    M= 256   mean R²p(VMC)=0.1445   mean R²p(exact-E)=0.1445
+    M= 512   mean R²p(VMC)=0.2235   mean R²p(exact-E)=0.2235
+    M=1024   mean R²p(VMC)=0.2683   mean R²p(exact-E)=0.2683
+    M=2048   mean R²p(VMC)=0.2765   mean R²p(exact-E)=0.2765
+
+  Frozen epoch  8: E=-12.00379914  target RMS=1.2434e-01  PR/H=0.998800
+    M=  32   mean R²p(VMC)=-0.7507   mean R²p(exact-E)=-0.7507
+    M=  64   mean R²p(VMC)=-0.3814   mean R²p(exact-E)=-0.3814
+    M= 128   mean R²p(VMC)=-0.0194   mean R²p(exact-E)=-0.0194
+    M= 256   mean R²p(VMC)=0.1398   mean R²p(exact-E)=0.1398
+    M= 512   mean R²p(VMC)=0.2192   mean R²p(exact-E)=0.2192
+    M=1024   mean R²p(VMC)=0.2432   mean R²p(exact-E)=0.2432
+    M=2048   mean R²p(VMC)=0.2661   mean R²p(exact-E)=0.2661
+
+  Frozen epoch 16: E=-12.00593319  target RMS=8.2576e-02  PR/H=0.997152
+    M=  32   mean R²p(VMC)=-0.7987   mean R²p(exact-E)=-0.7987
+    M=  64   mean R²p(VMC)=-0.4090   mean R²p(exact-E)=-0.4090
+    M= 128   mean R²p(VMC)=-0.0731   mean R²p(exact-E)=-0.0731
+    M= 256   mean R²p(VMC)=0.0998   mean R²p(exact-E)=0.0998
+    M= 512   mean R²p(VMC)=0.1862   mean R²p(exact-E)=0.1862
+    M=1024   mean R²p(VMC)=0.2405   mean R²p(exact-E)=0.2405
+    M=2048   mean R²p(VMC)=0.2367   mean R²p(exact-E)=0.2367
+
+  Frozen epoch 32: E=-12.00709806  target RMS=4.4917e-02  PR/H=0.994637
+    M=  32   mean R²p(VMC)=-0.9130   mean R²p(exact-E)=-0.9130
+    M=  64   mean R²p(VMC)=-0.5271   mean R²p(exact-E)=-0.5271
+    M= 128   mean R²p(VMC)=-0.1492   mean R²p(exact-E)=-0.1492
+    M= 256   mean R²p(VMC)=0.0142   mean R²p(exact-E)=0.0142
+    M= 512   mean R²p(VMC)=0.0985   mean R²p(exact-E)=0.0985
+    M=1024   mean R²p(VMC)=0.1500   mean R²p(exact-E)=0.1500
+    M=2048   mean R²p(VMC)=0.1765   mean R²p(exact-E)=0.1765
+
+  Frozen epoch 64: E=-12.00739662  target RMS=2.6302e-02  PR/H=0.992832
+    M=  32   mean R²p(VMC)=-0.9273   mean R²p(exact-E)=-0.9273
+    M=  64   mean R²p(VMC)=-0.6902   mean R²p(exact-E)=-0.6902
+    M= 128   mean R²p(VMC)=-0.3300   mean R²p(exact-E)=-0.3300
+    M= 256   mean R²p(VMC)=-0.1291   mean R²p(exact-E)=-0.1291
+    M= 512   mean R²p(VMC)=-0.0305   mean R²p(exact-E)=-0.0305
+    M=1024   mean R²p(VMC)=0.0097   mean R²p(exact-E)=0.0097
+    M=2048   mean R²p(VMC)=0.0359   mean R²p(exact-E)=0.0359
+
+Training trajectory 3/3
+
+  Frozen epoch  1: E=-12.00000000  target RMS=1.7321e-01  PR/H=1.000000
+    M=  32   mean R²p(VMC)=-0.8013   mean R²p(exact-E)=-0.7963
+    M=  64   mean R²p(VMC)=-0.3963   mean R²p(exact-E)=-0.3942
+    M= 128   mean R²p(VMC)=-0.0178   mean R²p(exact-E)=-0.0178
+    M= 256   mean R²p(VMC)=0.1429   mean R²p(exact-E)=0.1429
+    M= 512   mean R²p(VMC)=0.2062   mean R²p(exact-E)=0.2062
+    M=1024   mean R²p(VMC)=0.2370   mean R²p(exact-E)=0.2370
+    M=2048   mean R²p(VMC)=0.2445   mean R²p(exact-E)=0.2445
+
+  Frozen epoch  4: E=-12.00174720  target RMS=1.5244e-01  PR/H=0.999618
+    M=  32   mean R²p(VMC)=-0.7607   mean R²p(exact-E)=-0.7607
+    M=  64   mean R²p(VMC)=-0.3637   mean R²p(exact-E)=-0.3637
+    M= 128   mean R²p(VMC)=-0.0461   mean R²p(exact-E)=-0.0461
+    M= 256   mean R²p(VMC)=0.1604   mean R²p(exact-E)=0.1604
+    M= 512   mean R²p(VMC)=0.2281   mean R²p(exact-E)=0.2281
+    M=1024   mean R²p(VMC)=0.2524   mean R²p(exact-E)=0.2524
+    M=2048   mean R²p(VMC)=0.2530   mean R²p(exact-E)=0.2530
+
+  Frozen epoch  8: E=-12.00374651  target RMS=1.2428e-01  PR/H=0.999007
+    M=  32   mean R²p(VMC)=-0.7433   mean R²p(exact-E)=-0.7433
+    M=  64   mean R²p(VMC)=-0.4650   mean R²p(exact-E)=-0.4650
+    M= 128   mean R²p(VMC)=-0.0636   mean R²p(exact-E)=-0.0636
+    M= 256   mean R²p(VMC)=0.1309   mean R²p(exact-E)=0.1309
+    M= 512   mean R²p(VMC)=0.2226   mean R²p(exact-E)=0.2226
+    M=1024   mean R²p(VMC)=0.2460   mean R²p(exact-E)=0.2460
+    M=2048   mean R²p(VMC)=0.2609   mean R²p(exact-E)=0.2609
+
+  Frozen epoch 16: E=-12.00586958  target RMS=8.4159e-02  PR/H=0.997250
+    M=  32   mean R²p(VMC)=-0.7892   mean R²p(exact-E)=-0.7892
+    M=  64   mean R²p(VMC)=-0.4788   mean R²p(exact-E)=-0.4788
+    M= 128   mean R²p(VMC)=-0.0451   mean R²p(exact-E)=-0.0451
+    M= 256   mean R²p(VMC)=0.0835   mean R²p(exact-E)=0.0835
+    M= 512   mean R²p(VMC)=0.2081   mean R²p(exact-E)=0.2081
+    M=1024   mean R²p(VMC)=0.2598   mean R²p(exact-E)=0.2598
+    M=2048   mean R²p(VMC)=0.2920   mean R²p(exact-E)=0.2920
+
+  Frozen epoch 32: E=-12.00709785  target RMS=4.5061e-02  PR/H=0.994632
+    M=  32   mean R²p(VMC)=-0.8621   mean R²p(exact-E)=-0.8621
+    M=  64   mean R²p(VMC)=-0.5482   mean R²p(exact-E)=-0.5482
+    M= 128   mean R²p(VMC)=-0.1962   mean R²p(exact-E)=-0.1962
+    M= 256   mean R²p(VMC)=-0.0068   mean R²p(exact-E)=-0.0068
+    M= 512   mean R²p(VMC)=0.0937   mean R²p(exact-E)=0.0937
+    M=1024   mean R²p(VMC)=0.1243   mean R²p(exact-E)=0.1243
+    M=2048   mean R²p(VMC)=0.1472   mean R²p(exact-E)=0.1472
+
+  Frozen epoch 64: E=-12.00739590  target RMS=2.6310e-02  PR/H=0.992833
+    M=  32   mean R²p(VMC)=-1.0125   mean R²p(exact-E)=-1.0125
+    M=  64   mean R²p(VMC)=-0.7186   mean R²p(exact-E)=-0.7186
+    M= 128   mean R²p(VMC)=-0.2969   mean R²p(exact-E)=-0.2969
+    M= 256   mean R²p(VMC)=-0.1132   mean R²p(exact-E)=-0.1132
+    M= 512   mean R²p(VMC)=-0.0301   mean R²p(exact-E)=-0.0301
+    M=1024   mean R²p(VMC)=0.0173   mean R²p(exact-E)=0.0173
+    M=2048   mean R²p(VMC)=0.0406   mean R²p(exact-E)=0.0406
+
+
+============================================================
+J/h = 2.0000
+============================================================
+
+Training trajectory 1/3
+
+  Frozen epoch  1: E=-12.00000000  target RMS=6.9282e+00  PR/H=1.000000
+    M=  32   mean R²p(VMC)=-0.7320   mean R²p(exact-E)=-0.7320
+    M=  64   mean R²p(VMC)=-0.3671   mean R²p(exact-E)=-0.3776
+    M= 128   mean R²p(VMC)=-0.0285   mean R²p(exact-E)=-0.0285
+    M= 256   mean R²p(VMC)=0.1310   mean R²p(exact-E)=0.1310
+    M= 512   mean R²p(VMC)=0.2099   mean R²p(exact-E)=0.2099
+    M=1024   mean R²p(VMC)=0.2391   mean R²p(exact-E)=0.2391
+    M=2048   mean R²p(VMC)=0.2449   mean R²p(exact-E)=0.2449
+
+  Frozen epoch  4: E=-15.15421062  target RMS=5.8859e+00  PR/H=0.569367
+    M=  32   mean R²p(VMC)=-0.6397   mean R²p(exact-E)=-0.6351
+    M=  64   mean R²p(VMC)=-0.3355   mean R²p(exact-E)=-0.3352
+    M= 128   mean R²p(VMC)=0.0218   mean R²p(exact-E)=0.0217
+    M= 256   mean R²p(VMC)=0.1507   mean R²p(exact-E)=0.1507
+    M= 512   mean R²p(VMC)=0.2320   mean R²p(exact-E)=0.2320
+    M=1024   mean R²p(VMC)=0.2544   mean R²p(exact-E)=0.2544
+    M=2048   mean R²p(VMC)=0.2767   mean R²p(exact-E)=0.2767
+
+  Frozen epoch  8: E=-18.04942340  target RMS=4.8709e+00  PR/H=0.232719
+    M=  32   mean R²p(VMC)=-0.5599   mean R²p(exact-E)=-0.5562
+    M=  64   mean R²p(VMC)=-0.1900   mean R²p(exact-E)=-0.1910
+    M= 128   mean R²p(VMC)=0.0562   mean R²p(exact-E)=0.0578
+    M= 256   mean R²p(VMC)=0.1757   mean R²p(exact-E)=0.1754
+    M= 512   mean R²p(VMC)=0.2449   mean R²p(exact-E)=0.2449
+    M=1024   mean R²p(VMC)=0.2808   mean R²p(exact-E)=0.2808
+    M=2048   mean R²p(VMC)=0.2975   mean R²p(exact-E)=0.2975
+
+  Frozen epoch 16: E=-21.40542584  target RMS=3.6256e+00  PR/H=0.022687
+    M=  32   mean R²p(VMC)=-0.2571   mean R²p(exact-E)=-0.2531
+    M=  64   mean R²p(VMC)=0.0325   mean R²p(exact-E)=0.0313
+    M= 128   mean R²p(VMC)=0.1921   mean R²p(exact-E)=0.1914
+    M= 256   mean R²p(VMC)=0.2695   mean R²p(exact-E)=0.2695
+    M= 512   mean R²p(VMC)=0.3599   mean R²p(exact-E)=0.3599
+    M=1024   mean R²p(VMC)=0.3935   mean R²p(exact-E)=0.3935
+    M=2048   mean R²p(VMC)=0.4288   mean R²p(exact-E)=0.4288
+
+  Frozen epoch 32: E=-25.37043203  target RMS=1.1626e+00  PR/H=0.000771
+    M=  32   mean R²p(VMC)=-0.5515   mean R²p(exact-E)=-0.5515
+    M=  64   mean R²p(VMC)=-0.5002   mean R²p(exact-E)=-0.4968
+    M= 128   mean R²p(VMC)=-0.5565   mean R²p(exact-E)=-0.5772
+    M= 256   mean R²p(VMC)=-0.3765   mean R²p(exact-E)=-0.3765
+    M= 512   mean R²p(VMC)=-0.0382   mean R²p(exact-E)=-0.0382
+    M=1024   mean R²p(VMC)=0.0954   mean R²p(exact-E)=0.0954
+    M=2048   mean R²p(VMC)=0.2241   mean R²p(exact-E)=0.2241
+
+  Frozen epoch 64: E=-25.44009077  target RMS=9.7687e-01  PR/H=0.000704
+    M=  32   mean R²p(VMC)=-0.2300   mean R²p(exact-E)=-0.2300
+    M=  64   mean R²p(VMC)=-2.5615   mean R²p(exact-E)=-2.5615
+    M= 128   mean R²p(VMC)=-0.8963   mean R²p(exact-E)=-0.8963
+    M= 256   mean R²p(VMC)=-0.8245   mean R²p(exact-E)=-0.8245
+    M= 512   mean R²p(VMC)=-0.3041   mean R²p(exact-E)=-0.3041
+    M=1024   mean R²p(VMC)=-0.1589   mean R²p(exact-E)=-0.1589
+    M=2048   mean R²p(VMC)=-0.0139   mean R²p(exact-E)=-0.0139
+
+Training trajectory 2/3
+
+  Frozen epoch  1: E=-12.00000000  target RMS=6.9282e+00  PR/H=1.000000
+    M=  32   mean R²p(VMC)=-0.7461   mean R²p(exact-E)=-0.7440
+    M=  64   mean R²p(VMC)=-0.3582   mean R²p(exact-E)=-0.3582
+    M= 128   mean R²p(VMC)=-0.0334   mean R²p(exact-E)=-0.0334
+    M= 256   mean R²p(VMC)=0.1424   mean R²p(exact-E)=0.1424
+    M= 512   mean R²p(VMC)=0.2109   mean R²p(exact-E)=0.2109
+    M=1024   mean R²p(VMC)=0.2400   mean R²p(exact-E)=0.2400
+    M=2048   mean R²p(VMC)=0.2449   mean R²p(exact-E)=0.2449
+
+  Frozen epoch  4: E=-15.29073305  target RMS=5.9287e+00  PR/H=0.464688
+    M=  32   mean R²p(VMC)=-0.7455   mean R²p(exact-E)=-0.7376
+    M=  64   mean R²p(VMC)=-0.2741   mean R²p(exact-E)=-0.2669
+    M= 128   mean R²p(VMC)=-0.0149   mean R²p(exact-E)=-0.0149
+    M= 256   mean R²p(VMC)=0.1629   mean R²p(exact-E)=0.1629
+    M= 512   mean R²p(VMC)=0.2436   mean R²p(exact-E)=0.2436
+    M=1024   mean R²p(VMC)=0.2788   mean R²p(exact-E)=0.2788
+    M=2048   mean R²p(VMC)=0.2891   mean R²p(exact-E)=0.2891
+
+  Frozen epoch  8: E=-18.10127564  target RMS=4.9656e+00  PR/H=0.170225
+    M=  32   mean R²p(VMC)=-0.5342   mean R²p(exact-E)=-0.5327
+    M=  64   mean R²p(VMC)=-0.2168   mean R²p(exact-E)=-0.2112
+    M= 128   mean R²p(VMC)=0.0417   mean R²p(exact-E)=0.0417
+    M= 256   mean R²p(VMC)=0.1897   mean R²p(exact-E)=0.1897
+    M= 512   mean R²p(VMC)=0.2305   mean R²p(exact-E)=0.2305
+    M=1024   mean R²p(VMC)=0.2712   mean R²p(exact-E)=0.2712
+    M=2048   mean R²p(VMC)=0.2929   mean R²p(exact-E)=0.2929
+
+  Frozen epoch 16: E=-22.27631152  target RMS=3.3732e+00  PR/H=0.007447
+    M=  32   mean R²p(VMC)=-0.1508   mean R²p(exact-E)=-0.1466
+    M=  64   mean R²p(VMC)=0.0651   mean R²p(exact-E)=0.0668
+    M= 128   mean R²p(VMC)=0.2766   mean R²p(exact-E)=0.2748
+    M= 256   mean R²p(VMC)=0.3699   mean R²p(exact-E)=0.3694
+    M= 512   mean R²p(VMC)=0.3958   mean R²p(exact-E)=0.3958
+    M=1024   mean R²p(VMC)=0.4349   mean R²p(exact-E)=0.4349
+    M=2048   mean R²p(VMC)=0.4513   mean R²p(exact-E)=0.4513
+
+  Frozen epoch 32: E=-25.39455540  target RMS=1.1669e+00  PR/H=0.000462
+    M=  32   mean R²p(VMC)=-0.3447   mean R²p(exact-E)=-0.3447
+    M=  64   mean R²p(VMC)=-0.3097   mean R²p(exact-E)=-0.3097
+    M= 128   mean R²p(VMC)=-0.2526   mean R²p(exact-E)=-0.2526
+    M= 256   mean R²p(VMC)=-0.1477   mean R²p(exact-E)=-0.1470
+    M= 512   mean R²p(VMC)=0.0012   mean R²p(exact-E)=0.0036
+    M=1024   mean R²p(VMC)=0.1210   mean R²p(exact-E)=0.1216
+    M=2048   mean R²p(VMC)=0.1782   mean R²p(exact-E)=0.1782
+
+  Frozen epoch 64: E=-25.42254713  target RMS=1.1619e+00  PR/H=0.000438
+    M=  32   mean R²p(VMC)=-0.4600   mean R²p(exact-E)=-0.4600
+    M=  64   mean R²p(VMC)=-0.2137   mean R²p(exact-E)=-0.2151
+    M= 128   mean R²p(VMC)=-0.2794   mean R²p(exact-E)=-0.2794
+    M= 256   mean R²p(VMC)=0.0125   mean R²p(exact-E)=0.0117
+    M= 512   mean R²p(VMC)=-0.1014   mean R²p(exact-E)=-0.0988
+    M=1024   mean R²p(VMC)=0.0608   mean R²p(exact-E)=0.0578
+    M=2048   mean R²p(VMC)=0.1517   mean R²p(exact-E)=0.1566
+
+Training trajectory 3/3
+
+  Frozen epoch  1: E=-12.00000000  target RMS=6.9282e+00  PR/H=1.000000
+    M=  32   mean R²p(VMC)=-0.7167   mean R²p(exact-E)=-0.7145
+    M=  64   mean R²p(VMC)=-0.3403   mean R²p(exact-E)=-0.3403
+    M= 128   mean R²p(VMC)=-0.0551   mean R²p(exact-E)=-0.0544
+    M= 256   mean R²p(VMC)=0.1416   mean R²p(exact-E)=0.1416
+    M= 512   mean R²p(VMC)=0.2130   mean R²p(exact-E)=0.2130
+    M=1024   mean R²p(VMC)=0.2379   mean R²p(exact-E)=0.2379
+    M=2048   mean R²p(VMC)=0.2445   mean R²p(exact-E)=0.2445
+
+  Frozen epoch  4: E=-14.86318231  target RMS=6.0190e+00  PR/H=0.596063
+    M=  32   mean R²p(VMC)=-0.7361   mean R²p(exact-E)=-0.7378
+    M=  64   mean R²p(VMC)=-0.3072   mean R²p(exact-E)=-0.3138
+    M= 128   mean R²p(VMC)=-0.0526   mean R²p(exact-E)=-0.0526
+    M= 256   mean R²p(VMC)=0.1510   mean R²p(exact-E)=0.1510
+    M= 512   mean R²p(VMC)=0.2212   mean R²p(exact-E)=0.2212
+    M=1024   mean R²p(VMC)=0.2502   mean R²p(exact-E)=0.2502
+    M=2048   mean R²p(VMC)=0.2664   mean R²p(exact-E)=0.2664
+
+  Frozen epoch  8: E=-18.08354312  target RMS=4.8760e+00  PR/H=0.238632
+    M=  32   mean R²p(VMC)=-0.5219   mean R²p(exact-E)=-0.5245
+    M=  64   mean R²p(VMC)=-0.3000   mean R²p(exact-E)=-0.3010
+    M= 128   mean R²p(VMC)=-0.0008   mean R²p(exact-E)=-0.0018
+    M= 256   mean R²p(VMC)=0.1687   mean R²p(exact-E)=0.1687
+    M= 512   mean R²p(VMC)=0.2236   mean R²p(exact-E)=0.2236
+    M=1024   mean R²p(VMC)=0.2595   mean R²p(exact-E)=0.2595
+    M=2048   mean R²p(VMC)=0.2781   mean R²p(exact-E)=0.2781
+
+  Frozen epoch 16: E=-21.86895718  target RMS=3.6181e+00  PR/H=0.010422
+    M=  32   mean R²p(VMC)=-0.1310   mean R²p(exact-E)=-0.1314
+    M=  64   mean R²p(VMC)=0.0552   mean R²p(exact-E)=0.0552
+    M= 128   mean R²p(VMC)=0.2320   mean R²p(exact-E)=0.2320
+    M= 256   mean R²p(VMC)=0.3079   mean R²p(exact-E)=0.3079
+    M= 512   mean R²p(VMC)=0.3683   mean R²p(exact-E)=0.3683
+    M=1024   mean R²p(VMC)=0.3957   mean R²p(exact-E)=0.3957
+    M=2048   mean R²p(VMC)=0.4200   mean R²p(exact-E)=0.4200
+
+  Frozen epoch 32: E=-25.39914574  target RMS=1.1085e+00  PR/H=0.000473
+    M=  32   mean R²p(VMC)=-0.5872   mean R²p(exact-E)=-0.5872
+    M=  64   mean R²p(VMC)=-0.5290   mean R²p(exact-E)=-0.5290
+    M= 128   mean R²p(VMC)=-0.4081   mean R²p(exact-E)=-0.4081
+    M= 256   mean R²p(VMC)=-0.1257   mean R²p(exact-E)=-0.1257
+    M= 512   mean R²p(VMC)=0.1182   mean R²p(exact-E)=0.1182
+    M=1024   mean R²p(VMC)=0.1921   mean R²p(exact-E)=0.1921
+    M=2048   mean R²p(VMC)=0.2942   mean R²p(exact-E)=0.2907
+
+  Frozen epoch 64: E=-25.46296722  target RMS=8.9849e-01  PR/H=0.000404
+    M=  32   mean R²p(VMC)=-0.2769   mean R²p(exact-E)=-0.2769
+    M=  64   mean R²p(VMC)=-0.4572   mean R²p(exact-E)=-0.4572
+    M= 128   mean R²p(VMC)=-0.4445   mean R²p(exact-E)=-0.4445
+    M= 256   mean R²p(VMC)=-0.1407   mean R²p(exact-E)=-0.1388
+    M= 512   mean R²p(VMC)=-0.1896   mean R²p(exact-E)=-0.1896
+    M=1024   mean R²p(VMC)=-0.1610   mean R²p(exact-E)=-0.1610
+    M=2048   mean R²p(VMC)=-0.0693   mean R²p(exact-E)=-0.0689
+
+
+============================================================
+FROZEN-TARGET RECONSTRUCTION SUMMARY
+============================================================
+
+ J/h  epoch     M       R²p VMC          R²p exact-E       ΔR²p
+--------------------------------------------------------------------------
+0.05     1     32     -0.725 ± 0.310      -0.722 ± 0.307     +0.0036
+0.05     1     64     -0.400 ± 0.182      -0.400 ± 0.181     +0.0003
+0.05     1    128     -0.024 ± 0.076      -0.024 ± 0.076     +0.0000
+0.05     1    256      0.137 ± 0.040       0.137 ± 0.040     +0.0000
+0.05     1    512      0.211 ± 0.018       0.211 ± 0.018     +0.0000
+0.05     1   1024      0.238 ± 0.006       0.238 ± 0.006     +0.0000
+0.05     1   2048      0.244 ± 0.002       0.244 ± 0.002     +0.0000
+
+0.05     4     32     -0.780 ± 0.393      -0.780 ± 0.393     +0.0000
+0.05     4     64     -0.385 ± 0.183      -0.385 ± 0.183     +0.0000
+0.05     4    128     -0.043 ± 0.113      -0.043 ± 0.113     +0.0000
+0.05     4    256      0.155 ± 0.062       0.155 ± 0.062     +0.0000
+0.05     4    512      0.229 ± 0.053       0.229 ± 0.053     +0.0000
+0.05     4   1024      0.261 ± 0.045       0.261 ± 0.045     -0.0000
+0.05     4   2048      0.270 ± 0.043       0.270 ± 0.043     -0.0000
+
+0.05     8     32     -0.779 ± 0.340      -0.779 ± 0.340     +0.0000
+0.05     8     64     -0.418 ± 0.209      -0.418 ± 0.209     -0.0000
+0.05     8    128     -0.035 ± 0.103      -0.035 ± 0.103     +0.0000
+0.05     8    256      0.146 ± 0.086       0.146 ± 0.086     -0.0000
+0.05     8    512      0.227 ± 0.074       0.227 ± 0.074     +0.0000
+0.05     8   1024      0.257 ± 0.060       0.257 ± 0.060     +0.0000
+0.05     8   2048      0.283 ± 0.065       0.283 ± 0.065     +0.0000
+
+0.05    16     32     -0.787 ± 0.310      -0.787 ± 0.310     +0.0000
+0.05    16     64     -0.437 ± 0.235      -0.437 ± 0.235     +0.0000
+0.05    16    128     -0.066 ± 0.094      -0.066 ± 0.094     +0.0000
+0.05    16    256      0.101 ± 0.074       0.101 ± 0.074     +0.0000
+0.05    16    512      0.203 ± 0.063       0.203 ± 0.063     +0.0000
+0.05    16   1024      0.247 ± 0.046       0.247 ± 0.046     +0.0000
+0.05    16   2048      0.260 ± 0.053       0.260 ± 0.053     +0.0000
+
+0.05    32     32     -0.899 ± 0.344      -0.899 ± 0.344     +0.0000
+0.05    32     64     -0.565 ± 0.223      -0.565 ± 0.223     +0.0000
+0.05    32    128     -0.184 ± 0.103      -0.184 ± 0.103     +0.0000
+0.05    32    256      0.009 ± 0.060       0.009 ± 0.060     -0.0000
+0.05    32    512      0.095 ± 0.040       0.095 ± 0.040     +0.0000
+0.05    32   1024      0.141 ± 0.034       0.141 ± 0.034     -0.0000
+0.05    32   2048      0.167 ± 0.033       0.167 ± 0.033     +0.0000
+
+0.05    64     32     -0.981 ± 0.336      -0.981 ± 0.336     +0.0000
+0.05    64     64     -0.718 ± 0.324      -0.718 ± 0.324     +0.0000
+0.05    64    128     -0.314 ± 0.096      -0.314 ± 0.096     +0.0000
+0.05    64    256     -0.122 ± 0.043      -0.122 ± 0.043     +0.0000
+0.05    64    512     -0.024 ± 0.028      -0.024 ± 0.028     +0.0000
+0.05    64   1024      0.020 ± 0.023       0.020 ± 0.023     +0.0000
+0.05    64   2048      0.042 ± 0.019       0.042 ± 0.019     -0.0000
+
+2.00     1     32     -0.732 ± 0.294      -0.730 ± 0.294     +0.0014
+2.00     1     64     -0.355 ± 0.183      -0.359 ± 0.181     -0.0035
+2.00     1    128     -0.039 ± 0.083      -0.039 ± 0.083     +0.0002
+2.00     1    256      0.138 ± 0.044       0.138 ± 0.044     +0.0000
+2.00     1    512      0.211 ± 0.020       0.211 ± 0.020     +0.0000
+2.00     1   1024      0.239 ± 0.005       0.239 ± 0.005     +0.0000
+2.00     1   2048      0.245 ± 0.002       0.245 ± 0.002     +0.0000
+
+2.00     4     32     -0.707 ± 0.339      -0.704 ± 0.349     +0.0036
+2.00     4     64     -0.306 ± 0.169      -0.305 ± 0.168     +0.0003
+2.00     4    128     -0.015 ± 0.097      -0.015 ± 0.097     -0.0000
+2.00     4    256      0.155 ± 0.052       0.155 ± 0.052     -0.0000
+2.00     4    512      0.232 ± 0.034       0.232 ± 0.034     +0.0000
+2.00     4   1024      0.261 ± 0.028       0.261 ± 0.028     +0.0000
+2.00     4   2048      0.277 ± 0.023       0.277 ± 0.023     +0.0000
+
+2.00     8     32     -0.539 ± 0.294      -0.538 ± 0.301     +0.0009
+2.00     8     64     -0.236 ± 0.173      -0.234 ± 0.170     +0.0012
+2.00     8    128      0.032 ± 0.095       0.033 ± 0.095     +0.0002
+2.00     8    256      0.178 ± 0.051       0.178 ± 0.052     -0.0001
+2.00     8    512      0.233 ± 0.048       0.233 ± 0.048     +0.0000
+2.00     8   1024      0.270 ± 0.037       0.270 ± 0.037     +0.0000
+2.00     8   2048      0.290 ± 0.033       0.290 ± 0.033     +0.0000
+
+2.00    16     32     -0.180 ± 0.288      -0.177 ± 0.288     +0.0026
+2.00    16     64      0.051 ± 0.122       0.051 ± 0.123     +0.0002
+2.00    16    128      0.234 ± 0.085       0.233 ± 0.085     -0.0009
+2.00    16    256      0.316 ± 0.066       0.316 ± 0.066     -0.0002
+2.00    16    512      0.375 ± 0.043       0.375 ± 0.043     +0.0000
+2.00    16   1024      0.408 ± 0.035       0.408 ± 0.035     +0.0000
+2.00    16   2048      0.433 ± 0.023       0.433 ± 0.023     +0.0000
+
+2.00    32     32     -0.494 ± 0.873      -0.494 ± 0.873     +0.0000
+2.00    32     64     -0.446 ± 0.595      -0.445 ± 0.593     +0.0011
+2.00    32    128     -0.406 ± 0.624      -0.413 ± 0.633     -0.0069
+2.00    32    256     -0.217 ± 0.473      -0.216 ± 0.473     +0.0002
+2.00    32    512      0.027 ± 0.194       0.028 ± 0.193     +0.0008
+2.00    32   1024      0.136 ± 0.121       0.136 ± 0.121     +0.0002
+2.00    32   2048      0.232 ± 0.105       0.231 ± 0.105     -0.0012
+
+2.00    64     32     -0.322 ± 0.826      -0.322 ± 0.826     +0.0000
+2.00    64     64     -1.077 ± 5.811      -1.078 ± 5.811     -0.0005
+2.00    64    128     -0.540 ± 1.307      -0.540 ± 1.307     +0.0000
+2.00    64    256     -0.318 ± 0.700      -0.317 ± 0.700     +0.0003
+2.00    64    512     -0.198 ± 0.578      -0.198 ± 0.578     +0.0009
+2.00    64   1024     -0.086 ± 0.398      -0.087 ± 0.398     -0.0010
+2.00    64   2048      0.023 ± 0.276       0.025 ± 0.276     +0.0018
+
+
+============================================================
+RESULTS WRITTEN TO
+D:\Users\jsrg2\Documents\maestría\nuevo\v0.2-log-vmc\julia\experiments\results\frozen_target_reconstruction.csv
+============================================================

@@ -2,6 +2,7 @@ module ExperimentUtils
 
 using GBTQuantum
 using Statistics
+using Random: AbstractRNG
 
 export enumerate_states, weighted_mean, weighted_r2, ordinary_r2,
        predict_all, shift_tree_leaves, scale_tree, tree_leaf_count,

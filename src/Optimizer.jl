@@ -23,7 +23,15 @@ struct TrainingResult
     magnitude_fit_mse::Vector{Float64}
     phase_fit_mse::Vector{Float64}
     runtime_seconds::Float64
+
+    # Instantaneous fraction of Hilbert space represented
+    # by the current training population.
     hilbert_coverage::Vector{Float64}
+
+    # Fraction of Hilbert space encountered at least once
+    # during training up to this epoch.
+    cumulative_hilbert_coverage::Vector{Float64}
+
     exact_energy::Vector{Float64}
     exact_variance::Vector{Float64}
 end
@@ -45,6 +53,12 @@ function train(H::TFIMHamiltonian, cfg::TrainingConfig=TrainingConfig())
     end
     
     hilbert_coverage = zeros(Float64, cfg.epochs)
+
+    cumulative_hilbert_coverage = zeros(Float64, cfg.epochs)
+
+    # For the system sizes considered here N <= 64, spin_key
+    # is a compact UInt64 representation.
+    visited_states = Set{UInt64}()
 
     exact_energy = fill(NaN, cfg.epochs)
     exact_variance = fill(NaN, cfg.epochs)
@@ -135,7 +149,18 @@ function train(H::TFIMHamiltonian, cfg::TrainingConfig=TrainingConfig())
 
         nunique = size(batch.states, 1)
         uh[epoch] = nunique / cfg.nsamples 
-        hilbert_coverage[epoch] = ldexp(Float64(nunique), -H.N)
+        @inbounds for j in axes(batch.states, 1)
+            push!(
+                visited_states,
+                spin_key(@view batch.states[j, :])
+            )
+        end
+
+        hilbert_coverage[epoch] =
+            ldexp(Float64(nunique), -H.N)
+
+        cumulative_hilbert_coverage[epoch] =
+            ldexp(Float64(length(visited_states)), -H.N)
         
         mh[epoch] = weighted_mse(treeA,batch.states,yA,weights)
 
@@ -151,9 +176,18 @@ function train(H::TFIMHamiltonian, cfg::TrainingConfig=TrainingConfig())
 
     runtime = (time_ns()-t0)*1e-9
     return TrainingResult(
-        model,eh,eih,
-        vh,ah,uh,mh,ph,
-        runtime,hilbert_coverage,
-        exact_energy,exact_variance
+        model,
+        eh,
+        eih,
+        vh,
+        ah,
+        uh,
+        mh,
+        ph,
+        runtime,
+        hilbert_coverage,
+        cumulative_hilbert_coverage,
+        exact_energy,
+        exact_variance,
     )
 end

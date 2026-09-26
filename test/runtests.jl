@@ -454,3 +454,20 @@ end
     # Magnetization-sector distribution should also agree.
     @test dist.magnetization_tv < 0.02
 end
+
+@test length(result.cumulative_hilbert_coverage) == cfg.epochs
+
+@test all(
+    0.0 .<= result.cumulative_hilbert_coverage .<= 1.0
+)
+
+# Cumulative coverage can never decrease.
+@test all(
+    diff(result.cumulative_hilbert_coverage) .>= 0.0
+)
+
+# Everything in the current population must have been seen.
+@test all(
+    result.cumulative_hilbert_coverage .>=
+    result.hilbert_coverage
+)

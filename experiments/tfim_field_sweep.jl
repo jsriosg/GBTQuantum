@@ -1,3 +1,5 @@
+module TFIMFieldSweepExperiment
+
 using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 
@@ -457,4 +459,9 @@ function main()
     println("============================================")
 end
 
-main()
+
+end # module TFIMFieldSweepExperiment
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    TFIMFieldSweepExperiment.main()
+end

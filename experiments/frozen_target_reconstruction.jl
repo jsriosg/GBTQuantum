@@ -1,3 +1,5 @@
+module FrozenTargetReconstructionExperiment
+
 using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 
@@ -1639,4 +1641,9 @@ function main()
 end
 
 
-main()
+
+end # module FrozenTargetReconstructionExperiment
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    FrozenTargetReconstructionExperiment.main()
+end

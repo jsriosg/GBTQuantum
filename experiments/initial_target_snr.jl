@@ -1,3 +1,5 @@
+module InitialTargetSNRExperiment
+
 using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 
@@ -1001,4 +1003,9 @@ function main()
 end
 
 
-main()
+
+end # module InitialTargetSNRExperiment
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    InitialTargetSNRExperiment.main()
+end

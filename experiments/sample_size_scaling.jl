@@ -1,3 +1,5 @@
+module SampleSizeScalingExperiment
+
 using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 
@@ -538,4 +540,9 @@ function main()
 
 end
 
-main()
+
+end # module SampleSizeScalingExperiment
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    SampleSizeScalingExperiment.main()
+end

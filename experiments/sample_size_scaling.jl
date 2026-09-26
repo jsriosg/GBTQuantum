@@ -89,6 +89,33 @@ function main()
     runtime =
         zeros(nh, nM, nruns)
 
+    success =
+    fill(false, nh, nM, nruns)
+
+    final_variance =
+        fill(NaN, nh, nM, nruns)
+
+    max_variance =
+        fill(NaN, nh, nM, nruns)
+
+    mean_acceptance =
+        fill(NaN, nh, nM, nruns)
+
+    final_acceptance =
+        fill(NaN, nh, nM, nruns)
+
+    mean_unique_fraction =
+        fill(NaN, nh, nM, nruns)
+
+    final_unique_fraction =
+        fill(NaN, nh, nM, nruns)
+
+    final_fit_mse =
+        fill(NaN, nh, nM, nruns)
+
+    max_fit_mse =
+        fill(NaN, nh, nM, nruns)
+
     # ============================================================
     # Main experiment
     # ============================================================
@@ -138,38 +165,61 @@ function main()
                 result = train(H, cfg)
 
                 # ------------------------------------------------
+                # Training diagnostics
+                # ------------------------------------------------
+
+                finite_training =
+                    all(isfinite, result.energy_history) &&
+                    all(isfinite, result.variance_history) &&
+                    all(isfinite, result.magnitude_fit_mse)
+
+                success[ih,iM,run] = finite_training
+
+                final_variance[ih,iM,run] =
+                    result.variance_history[end]
+
+                max_variance[ih,iM,run] =
+                    maximum(result.variance_history)
+
+                mean_acceptance[ih,iM,run] =
+                    mean(result.acceptance_history)
+
+                final_acceptance[ih,iM,run] =
+                    result.acceptance_history[end]
+
+                mean_unique_fraction[ih,iM,run] =
+                    mean(result.unique_fraction_history)
+
+                final_unique_fraction[ih,iM,run] =
+                    result.unique_fraction_history[end]
+
+                final_fit_mse[ih,iM,run] =
+                    result.magnitude_fit_mse[end]
+
+                max_fit_mse[ih,iM,run] =
+                    maximum(result.magnitude_fit_mse)
+
+                # ------------------------------------------------
                 # Exact evaluation of learned GBT state
                 # ------------------------------------------------
 
-                model_energy =
-                    exact_model_energy(
-                        result.model,
-                        H,
-                    )
+                if finite_training
+                    model_energy = exact_model_energy(result.model, H)
+                    model_obs = exact_model_observables(result.model, H)
 
-                model_obs =
-                    exact_model_observables(
-                        result.model,
-                        H,
-                    )
+                    energy_error[ih,iM,run] =
+                        abs(real(model_energy.energy) - exact_energy[ih])
 
-                energy_error[ih, iM, run] =
-                    abs(
-                        real(model_energy.energy) -
-                        exact_energy[ih]
-                    )
+                    abs_mz_error[ih,iM,run] =
+                        abs(model_obs.abs_mz - exact_abs_mz[ih])
 
-                abs_mz_error[ih, iM, run] =
-                    abs(
-                        model_obs.abs_mz -
-                        exact_abs_mz[ih]
-                    )
-
-                mx_error[ih, iM, run] =
-                    abs(
-                        real(model_obs.mx) -
-                        exact_mx[ih]
-                    )
+                    mx_error[ih,iM,run] =
+                        abs(real(model_obs.mx) - exact_mx[ih])
+                else
+                    energy_error[ih,iM,run] = NaN
+                    abs_mz_error[ih,iM,run] = NaN
+                    mx_error[ih,iM,run] = NaN
+                end
 
                 instantaneous_coverage[ih, iM, run] =
                     result.hilbert_coverage[end]

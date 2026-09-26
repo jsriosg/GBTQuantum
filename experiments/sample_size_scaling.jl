@@ -6,6 +6,17 @@ using Statistics
 using Printf
 using Plots
 
+function finite_mean_std(v)
+    w = filter(isfinite, v)
+
+    isempty(w) && return (NaN, NaN)
+
+    μ = mean(w)
+    σ = length(w) > 1 ? std(w) : 0.0
+
+    return μ, σ
+end
+
 function main()
 
     # ============================================================
@@ -248,20 +259,33 @@ function main()
     # Statistics over independent trainings
     # ============================================================
 
-    mean_E =
-        dropdims(mean(energy_error, dims=3), dims=3)
+    mean_E = fill(NaN, nh, nM)
+    std_E = fill(NaN, nh, nM)
 
-    std_E =
-        dropdims(std(energy_error, dims=3), dims=3)
+    mean_abs_mz = fill(NaN, nh, nM)
+    std_abs_mz = fill(NaN, nh, nM)
 
-    mean_abs_mz =
-        dropdims(mean(abs_mz_error, dims=3), dims=3)
+    mean_mx = fill(NaN, nh, nM)
+    std_mx = fill(NaN, nh, nM)
 
-    std_abs_mz =
-        dropdims(std(abs_mz_error, dims=3), dims=3)
+    success_rate = zeros(nh, nM)
 
-    mean_mx =
-        dropdims(mean(mx_error, dims=3), dims=3)
+    for ih in 1:nh
+        for iM in 1:nM
+
+            mean_E[ih,iM], std_E[ih,iM] =
+                finite_mean_std(@view energy_error[ih,iM,:])
+
+            mean_abs_mz[ih,iM], std_abs_mz[ih,iM] =
+                finite_mean_std(@view abs_mz_error[ih,iM,:])
+
+            mean_mx[ih,iM], std_mx[ih,iM] =
+                finite_mean_std(@view mx_error[ih,iM,:])
+
+            success_rate[ih,iM] =
+                count(@view success[ih,iM,:]) / nruns
+        end
+    end
 
     std_mx =
         dropdims(std(mx_error, dims=3), dims=3)
@@ -470,7 +494,7 @@ function main()
         println()
 
         println(
-            " M       mean ΔE       mean Δ|mz|    mean Δmx      current cov    cumulative cov"
+            " M       mean ΔE       mean Δ|mz|    mean Δmx      current cov    cumulative cov    success"
         )
 
         println(
@@ -478,15 +502,15 @@ function main()
         )
 
         for (iM, M) in enumerate(sample_sizes)
-
             @printf(
-                "%4d   %11.4e   %11.4e   %11.4e   %10.4f     %10.4f\n",
+                "%4d   %11.4e   %11.4e   %11.4e   %10.4f     %10.4f       %4.0f%%\n",
                 M,
                 mean_E[ih,iM],
                 mean_abs_mz[ih,iM],
                 mean_mx[ih,iM],
                 mean_inst_cov[ih,iM],
                 mean_cum_cov[ih,iM],
+                100 * success_rate[ih,iM],
             )
         end
     end

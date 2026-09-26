@@ -287,9 +287,6 @@ function main()
         end
     end
 
-    std_mx =
-        dropdims(std(mx_error, dims=3), dims=3)
-
     mean_inst_cov =
         dropdims(
             mean(instantaneous_coverage, dims=3),
@@ -317,9 +314,14 @@ function main()
         println(
             io,
             "h,N,nsamples,run," *
+            "success," *
             "energy_error,abs_mz_error,mx_error," *
-            "instantaneous_coverage," *
-            "cumulative_coverage,runtime"
+            "instantaneous_coverage,cumulative_coverage," *
+            "final_variance,max_variance," *
+            "mean_acceptance,final_acceptance," *
+            "mean_unique_fraction,final_unique_fraction," *
+            "final_fit_mse,max_fit_mse," *
+            "runtime"
         )
 
         for (ih, h) in enumerate(h_values)
@@ -335,12 +337,26 @@ function main()
                                 M,
                                 run,
 
+                                success[ih,iM,run],
+
                                 energy_error[ih,iM,run],
                                 abs_mz_error[ih,iM,run],
                                 mx_error[ih,iM,run],
 
                                 instantaneous_coverage[ih,iM,run],
                                 cumulative_coverage[ih,iM,run],
+
+                                final_variance[ih,iM,run],
+                                max_variance[ih,iM,run],
+
+                                mean_acceptance[ih,iM,run],
+                                final_acceptance[ih,iM,run],
+
+                                mean_unique_fraction[ih,iM,run],
+                                final_unique_fraction[ih,iM,run],
+
+                                final_fit_mse[ih,iM,run],
+                                max_fit_mse[ih,iM,run],
 
                                 runtime[ih,iM,run],
                             ),

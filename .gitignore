@@ -1,0 +1,39 @@
+# ============================================
+# Julia generated files
+# ============================================
+*.ji
+
+# Keep Manifest.toml tracked for reproducible thesis experiments.
+
+# ============================================
+# Experiment-generated results
+# ============================================
+experiments/results/*
+!experiments/results/.gitkeep
+
+# ============================================
+# Generated plots / figures
+# ============================================
+experiments/figures/*
+!experiments/figures/.gitkeep
+
+# ============================================
+# Temporary experiment output
+# ============================================
+output.txt
+*.log
+
+# ============================================
+# Editor / OS metadata
+# ============================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ============================================
+# Temporary / backup files
+# ============================================
+*.tmp
+*.bak
+*~

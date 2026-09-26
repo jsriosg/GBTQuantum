@@ -1,3 +1,5 @@
+module SamplerConvergenceExperiment
+
 using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 
@@ -230,4 +232,9 @@ function main()
     println("=============================================")
 end
 
-main()
+
+end # module SamplerConvergenceExperiment
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    SamplerConvergenceExperiment.main()
+end

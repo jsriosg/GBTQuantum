@@ -1,3 +1,5 @@
+module ParamagneticLimitExperiment
+
 using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 
@@ -458,4 +460,9 @@ function main()
 end
 
 
-main()
+
+end # module ParamagneticLimitExperiment
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    ParamagneticLimitExperiment.main()
+end

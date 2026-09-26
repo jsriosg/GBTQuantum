@@ -1,3 +1,5 @@
+module ExactTreeCapacityExperiment
+
 using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 
@@ -1383,4 +1385,9 @@ function main()
 end
 
 
-main()
+
+end # module ExactTreeCapacityExperiment
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    ExactTreeCapacityExperiment.main()
+end

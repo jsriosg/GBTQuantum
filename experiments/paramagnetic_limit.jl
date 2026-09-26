@@ -225,7 +225,7 @@ function main()
                 abs(obs.abs_mz - gs.abs_mz)
 
             mx_error[iM, run] =
-                abs(real(obs.mx) - gs.mx)
+                abs(real(obs.mx) - real(gs.mx))
 
             exact_model_variance[iM, run] = 
                 model_energy.variance

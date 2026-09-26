@@ -20,5 +20,5 @@ export Node, RegressionTree, GBMachine, LogGBState,
        energy_standard_error, validation_vmc, exact_model_energy,
        magnetization_z, abs_magnetization_z, magnetization_z2, local_magnetization_x,
        sampled_diagonal_observables, sampled_magnetization_x, exact_ground_state,
-       exact_model_observables, exact_ground_observables      
+       exact_model_observables, exact_ground_observables, validation_observables      
 end

@@ -341,6 +341,194 @@ function validation_vmc(
 end
 
 """
+    validation_observables(model, H;
+                           nsamples=2048,
+                           burn_in_sweeps=100,
+                           thinning_sweeps=1,
+                           seed=54321)
+
+Run an independent sequential Metropolis chain and estimate
+
+    <m_z>
+    <|m_z|>
+    <m_z^2>
+    <m_x>
+
+together with autocorrelation and effective-sample-size diagnostics
+for the diagonal observables.
+
+The chain is independent from the samples used during training.
+"""
+function validation_observables(
+    model::LogGBState,
+    H::TFIMHamiltonian;
+    nsamples::Int = 2048,
+    burn_in_sweeps::Int = 100,
+    thinning_sweeps::Int = 1,
+    seed::Int = 54321,
+)
+    nsamples > 0 ||
+        throw(ArgumentError("nsamples must be positive"))
+
+    burn_in_sweeps >= 0 ||
+        throw(ArgumentError("burn_in_sweeps must be non-negative"))
+
+    thinning_sweeps >= 1 ||
+        throw(ArgumentError("thinning_sweeps must be at least 1"))
+
+    rng = MersenneTwister(seed)
+
+    N = H.N
+
+    # ---------------------------------------------------------
+    # Initial state
+    # ---------------------------------------------------------
+
+    state = Vector{Int8}(undef, N)
+
+    @inbounds for j in 1:N
+        state[j] =
+            rand(rng, Bool) ? Int8(1) : Int8(-1)
+    end
+
+    currentA = logamplitude(model, state)
+
+    # ---------------------------------------------------------
+    # Lazy Metropolis transition
+    #
+    # Same transition used by validation_vmc.
+    # ---------------------------------------------------------
+
+    function lazy_step!(currentA)
+        if rand(rng) < 0.5
+            return currentA
+        end
+
+        _, newA = metropolis_step!(
+            rng,
+            model,
+            state,
+            currentA,
+        )
+
+        return newA
+    end
+
+    # ---------------------------------------------------------
+    # Burn-in
+    # ---------------------------------------------------------
+
+    for _ in 1:burn_in_sweeps
+        for _ in 1:N
+            currentA = lazy_step!(currentA)
+        end
+    end
+
+    # ---------------------------------------------------------
+    # Observable time series
+    # ---------------------------------------------------------
+
+    mz_series     = Vector{Float64}(undef, nsamples)
+    abs_mz_series = Vector{Float64}(undef, nsamples)
+    mz2_series    = Vector{Float64}(undef, nsamples)
+    mx_series     = Vector{ComplexF64}(undef, nsamples)
+
+    # ---------------------------------------------------------
+    # Measurements
+    # ---------------------------------------------------------
+
+    @inbounds for k in 1:nsamples
+
+        for _ in 1:thinning_sweeps
+            for _ in 1:N
+                currentA = lazy_step!(currentA)
+            end
+        end
+
+        mz = magnetization_z(state)
+
+        mz_series[k]     = mz
+        abs_mz_series[k] = abs(mz)
+        mz2_series[k]    = mz * mz
+
+        mx_series[k] =
+            local_magnetization_x(model, state)
+    end
+
+    # ---------------------------------------------------------
+    # Means
+    # ---------------------------------------------------------
+
+    mz = sum(mz_series) / nsamples
+    abs_mz = sum(abs_mz_series) / nsamples
+    mz2 = sum(mz2_series) / nsamples
+    mx = sum(mx_series) / nsamples
+
+    # ---------------------------------------------------------
+    # Autocorrelation diagnostics
+    # ---------------------------------------------------------
+
+    tau_mz =
+        integrated_autocorrelation_time(mz_series)
+
+    tau_abs_mz =
+        integrated_autocorrelation_time(abs_mz_series)
+
+    tau_mz2 =
+        integrated_autocorrelation_time(mz2_series)
+
+    ess_mz =
+        effective_sample_size(mz_series)
+
+    ess_abs_mz =
+        effective_sample_size(abs_mz_series)
+
+    ess_mz2 =
+        effective_sample_size(mz2_series)
+
+    # ---------------------------------------------------------
+    # Standard errors
+    #
+    # energy_standard_error is mathematically just an
+    # autocorrelation-corrected SE of a real scalar series,
+    # so it can also be used here.
+    # ---------------------------------------------------------
+
+    se_mz =
+        energy_standard_error(mz_series)
+
+    se_abs_mz =
+        energy_standard_error(abs_mz_series)
+
+    se_mz2 =
+        energy_standard_error(mz2_series)
+
+    return (
+        mz = mz,
+        abs_mz = abs_mz,
+        mz2 = mz2,
+        mx = mx,
+
+        tau_mz = tau_mz,
+        tau_abs_mz = tau_abs_mz,
+        tau_mz2 = tau_mz2,
+
+        ess_mz = ess_mz,
+        ess_abs_mz = ess_abs_mz,
+        ess_mz2 = ess_mz2,
+
+        se_mz = se_mz,
+        se_abs_mz = se_abs_mz,
+        se_mz2 = se_mz2,
+
+        mz_samples = mz_series,
+        abs_mz_samples = abs_mz_series,
+        mz2_samples = mz2_series,
+        mx_samples = mx_series,
+    )
+end
+
+"""
     exact_model_energy(model, H)
 
 Compute the exact Rayleigh quotient of `model` by enumerating the complete

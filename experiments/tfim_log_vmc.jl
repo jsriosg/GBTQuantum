@@ -31,6 +31,7 @@ Pkg.activate(joinpath(@__DIR__, ".."))
 using GBTQuantum
 using Statistics
 using Plots
+using Printf
 
 # ------------------------------------------------------------
 # Configuration
@@ -147,6 +148,139 @@ println("Initial coverage       = ", result.hilbert_coverage[1])
 println("Final coverage         = ", result.hilbert_coverage[end])
 println("Approx. final unique   = ", round(Int, result.hilbert_coverage[end] * hilbert_dim))
 println("============================================")
+
+
+# ============================================================
+# PHYSICAL OBSERVABLE VALIDATION
+# ============================================================
+
+println()
+println("Computing physical observables...")
+
+# ------------------------------------------------------------
+# 1. Exact observables of the true ground state
+# ------------------------------------------------------------
+
+gs_obs = exact_ground_observables(H)
+
+# ------------------------------------------------------------
+# 2. Exact observables of the learned GBT wavefunction
+# ------------------------------------------------------------
+
+model_obs = exact_model_observables(
+    result.model,
+    H,
+)
+
+# ------------------------------------------------------------
+# 3. Independent VMC estimate of learned wavefunction
+# ------------------------------------------------------------
+
+vmc_obs = validation_observables(
+    result.model,
+    H;
+    nsamples = 20_000,
+    burn_in_sweeps = 200,
+    thinning_sweeps = 1,
+    seed = 98765,
+)
+
+println()
+println("========== PHYSICAL OBSERVABLES ==========")
+println()
+
+println("                     Exact GS       GBT exact       GBT VMC")
+println("------------------------------------------------------------")
+
+@printf(
+    "<mz>              %12.8f   %12.8f   %12.8f\n",
+    gs_obs.mz,
+    model_obs.mz,
+    vmc_obs.mz,
+)
+
+@printf(
+    "<|mz|>            %12.8f   %12.8f   %12.8f\n",
+    gs_obs.abs_mz,
+    model_obs.abs_mz,
+    vmc_obs.abs_mz,
+)
+
+@printf(
+    "<mz^2>            %12.8f   %12.8f   %12.8f\n",
+    gs_obs.mz2,
+    model_obs.mz2,
+    vmc_obs.mz2,
+)
+
+@printf(
+    "<mx>              %12.8f   %12.8f   %12.8f\n",
+    gs_obs.mx,
+    real(model_obs.mx),
+    real(vmc_obs.mx),
+)
+
+println()
+println("========== MONTE CARLO DIAGNOSTICS ==========")
+
+@printf(
+    "tau_int(mz)       = %.6f\n",
+    vmc_obs.tau_mz,
+)
+
+@printf(
+    "tau_int(|mz|)     = %.6f\n",
+    vmc_obs.tau_abs_mz,
+)
+
+@printf(
+    "tau_int(mz^2)     = %.6f\n",
+    vmc_obs.tau_mz2,
+)
+
+println()
+
+@printf(
+    "ESS(mz)           = %.2f / %d\n",
+    vmc_obs.ess_mz,
+    length(vmc_obs.mz_samples),
+)
+
+@printf(
+    "ESS(|mz|)         = %.2f / %d\n",
+    vmc_obs.ess_abs_mz,
+    length(vmc_obs.abs_mz_samples),
+)
+
+@printf(
+    "ESS(mz^2)         = %.2f / %d\n",
+    vmc_obs.ess_mz2,
+    length(vmc_obs.mz2_samples),
+)
+
+println()
+
+@printf(
+    "SE(mz)            = %.8e\n",
+    vmc_obs.se_mz,
+)
+
+@printf(
+    "SE(|mz|)          = %.8e\n",
+    vmc_obs.se_abs_mz,
+)
+
+@printf(
+    "SE(mz^2)          = %.8e\n",
+    vmc_obs.se_mz2,
+)
+
+@printf(
+    "Im(<mx>) VMC      = %.8e\n",
+    imag(vmc_obs.mx),
+)
+
+println("=============================================")
 
 # ---------------------------------------------------------------
 # 1. Exact energy vs boosting iterations

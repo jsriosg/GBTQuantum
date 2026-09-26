@@ -362,3 +362,48 @@ end
         atol=1e-9,
     )
 end
+
+@testset "VMC observable validation" begin
+
+    H = TFIMHamiltonian(
+        4;
+        J=1.0,
+        h=1.0,
+        periodic=true,
+    )
+
+    model = LogGBState(use_phase=false)
+
+    obs = validation_observables(
+        model,
+        H;
+        nsamples=20_000,
+        burn_in_sweeps=100,
+        thinning_sweeps=1,
+        seed=24680,
+    )
+
+    # Exact values for the uniform wavefunction.
+    @test isapprox(obs.mz, 0.0; atol=0.03)
+    @test isapprox(obs.abs_mz, 0.375; atol=0.03)
+    @test isapprox(obs.mz2, 0.25; atol=0.03)
+
+    # m_x local estimator is exactly 1 for every state.
+    @test isapprox(real(obs.mx), 1.0; atol=1e-12)
+    @test isapprox(imag(obs.mx), 0.0; atol=1e-12)
+
+    # Statistical diagnostics must be sensible.
+    @test obs.tau_mz >= 0.5
+    @test obs.tau_abs_mz >= 0.5
+    @test obs.tau_mz2 >= 0.5
+
+    @test 0.0 < obs.ess_mz <= 20_000
+    @test 0.0 < obs.ess_abs_mz <= 20_000
+    @test 0.0 < obs.ess_mz2 <= 20_000
+
+    # The estimator must return one value per measurement.
+    @test length(obs.mz_samples) == 20_000
+    @test length(obs.abs_mz_samples) == 20_000
+    @test length(obs.mz2_samples) == 20_000
+    @test length(obs.mx_samples) == 20_000
+end

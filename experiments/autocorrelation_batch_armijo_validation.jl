@@ -20,8 +20,6 @@ const policies = ["batch_iid", "batch_tau"]
 common_seed(run,epoch,name,rep) =
     960_000_000 + 10_000_000*run + 100_000*epoch + rep + sum(codeunits(name))
 
-# Initial-positive-sequence estimate of integrated autocorrelation time.
-# The input is the chronological local-energy series from the actual VMC walkers.
 function tau_int_ips(x::AbstractVector{<:Real})
     n=length(x)
     n < 4 && return 0.5
@@ -33,24 +31,22 @@ function tau_int_ips(x::AbstractVector{<:Real})
     @inbounds for lag in 1:maxlag
         rho[lag]=dot(@view(y[1:n-lag]),@view(y[1+lag:n]))/((n-lag)*gamma0)
     end
-    s=0.0
-    k=1
+    s=0.0; k=1
     while k <= maxlag
-        pair = rho[k] + (k+1 <= maxlag ? rho[k+1] : 0.0)
+        pair=rho[k]+(k+1<=maxlag ? rho[k+1] : 0.0)
         pair <= 0 && break
-        s += pair
-        k += 2
+        s += pair; k += 2
     end
-    max(0.5, 0.5+s)
+    max(0.5,0.5+s)
 end
 
 function chronological_local_energies(H,model,samples)
     n=size(samples,1)
     e=Vector{Float64}(undef,n)
     @inbounds for i in 1:n
-        # local_energy is already exercised throughout GBTQuantum; keeping the
-        # uncompressed walker order here is essential for autocorrelation.
-        e[i]=GBTQuantum.local_energy(H,model,@view(samples[i,:]))
+        # VMC.jl defines local_energy! (not local_energy).  Keep the original
+        # walker ordering so the autocorrelation calculation is meaningful.
+        e[i]=real(GBTQuantum.local_energy!(H,model,@view(samples[i,:])))
     end
     e
 end
@@ -60,7 +56,7 @@ function baseline_stats(H,model,samples)
     n=length(e); E0=mean(e)
     v=n>1 ? var(e;corrected=true) : 0.0
     tau=tau_int_ips(e)
-    neff=min(Float64(n), max(1.0,n/(2tau)))
+    neff=min(Float64(n),max(1.0,n/(2tau)))
     se_iid=sqrt(max(v,0.0)/n)
     se_tau=sqrt(max(v,0.0)/neff)
     (E0=E0,se_iid=se_iid,se_tau=se_tau,tau=tau,neff=neff,n=n)

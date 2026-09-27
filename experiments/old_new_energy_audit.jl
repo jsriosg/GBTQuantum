@@ -20,6 +20,49 @@ const TOL = 1e-10
 maxabs(v) = maximum(abs.(v))
 rms(v) = sqrt(mean(abs2, v))
 
+# IMPORTANT: NV.build_flip_index is tied to the N=12 constant of
+# newton_step_validation.jl. This audit intentionally uses N=8 to match the
+# old-pipeline coupling diagnostic, so the flip table must infer its width from X.
+function build_flip_index_local(X)
+    nstates, nspins = size(X)
+    index = Dict{Tuple{Vararg{Int8}},Int}()
+    for i in 1:nstates
+        index[Tuple(@view X[i,:])] = i
+    end
+    flips = Matrix{Int}(undef, nstates, nspins)
+    for i in 1:nstates, j in 1:nspins
+        x = collect(@view X[i,:])
+        x[j] = -x[j]
+        flips[i,j] = index[Tuple(x)]
+    end
+    flips
+end
+
+# The imported NV.exact_energy_eta is likewise tied to NV.N=12 and NV.J=2.
+# For this audit we need the same formula, but parameterized by the actual H
+# used at each N=8 coupling. This isolates the formula without silently mixing
+# constants from a different experiment.
+function exact_energy_eta_local(fr, X, flips, f, eta, J, h)
+    nspins = size(X,2)
+    z = fr.logamp .+ eta .* f
+    z .-= maximum(z)
+    a = exp.(z)
+    den = sum(abs2, a)
+    num = 0.0
+    for i in axes(X,1)
+        diag = 0.0
+        for j in 1:nspins
+            jp = (j == nspins ? 1 : j+1)
+            diag += -J * Float64(X[i,j]) * Float64(X[i,jp])
+        end
+        num += diag * a[i]^2
+        for j in 1:nspins
+            num += -h * a[i] * a[flips[i,j]]
+        end
+    end
+    num / den
+end
+
 function old_exact_vectors(H, model, X)
     p = GBTQuantum.exact_probabilities(model, X)
     loga = Float64[GBTQuantum.logamplitude(model, @view(X[i,:])) for i in axes(X,1)]
@@ -29,9 +72,19 @@ function old_exact_vectors(H, model, X)
     return (p=p, loga=loga, eloc=eloc, E=E, y=y)
 end
 
-function audit_state(label, H, model, X, flips; f=nothing)
+function exact_frozen_problem_local(H, model, X)
+    p = GBTQuantum.exact_probabilities(model, X)
+    loga = Float64[GBTQuantum.logamplitude(model, @view(X[i,:])) for i in axes(X,1)]
+    eloc = ComplexF64[GBTQuantum.local_energy!(H, model, @view(X[i,:])) for i in axes(X,1)]
+    E = real(sum(p .* eloc))
+    y = -real.(eloc .- E)
+    return (probabilities=p, logamp=loga, eloc=real.(eloc), target=y,
+            energy=E, target_rms=sqrt(sum(p .* y.^2)))
+end
+
+function audit_state(label, H, model, X)
     old = old_exact_vectors(H, model, X)
-    new = NV.exact_frozen_problem(H, model, X)
+    new = exact_frozen_problem_local(H, model, X)
     exact_model = real(GBTQuantum.exact_model_energy(model, H).energy)
     Egs = GBTQuantum.exact_ground_energy(H)
 
@@ -47,44 +100,24 @@ function audit_state(label, H, model, X, flips; f=nothing)
     @printf("    max |Eloc_new-Eloc_old|      = %.3e\n", maxabs(new.eloc-old.eloc))
     @printf("    max |target_new-target_old|  = %.3e\n", maxabs(new.target-old.y))
     @printf("    variational margins old/new  = %.3e / %.3e\n", old.E-Egs, new.energy-Egs)
-
-    if f !== nothing
-        # This is the critical audit: compare the NEW hand-written eta energy
-        # against the project's canonical exact energy after applying exactly
-        # the same additive log-amplitude direction to a copy of the model.
-        Enew_formula = NV.exact_energy_eta(new, X, flips, f, ETA_TEST)
-        # f is supplied from an actual tree below, so the updated model can be
-        # represented exactly by scaling that tree.
-        @printf("    NEW exact_energy_eta(eta=.05) = % .12f\n", Enew_formula)
-    end
-
     return (old=old,new=new,Egs=Egs,exact_model=exact_model)
 end
 
 function first_tree_audit(ratio, H, X, flips)
-    rng = MersenneTwister(7_700_000 + round(Int,1000ratio))
     model = GBTQuantum.LogGBState(logamp_bias=0.0, phase_bias=0.0, use_phase=false)
+    a0 = audit_state("epoch 0 / uniform model", H, model, X)
 
-    # Epoch 0: absolutely no MC or tree involved.
-    a0 = audit_state("epoch 0 / uniform model", H, model, X, flips)
-
-    # Build ONE deterministic full-Hilbert tree from the exact target. This
-    # eliminates sampling as a possible explanation for any disagreement.
     tree = GBTQuantum.grow_tree(X, a0.new.target, a0.new.probabilities;
         max_depth=4, min_weight=1e-14, min_gain=0.0)
-    f = NV.centered_predictions(tree, X, a0.new.probabilities)
-
-    # Centering is only a constant gauge. To compare to the actual stored tree,
-    # use its uncentered prediction and verify the two eta energies coincide.
     raw = NV.predict_all(tree, X)
     mu = sum(a0.new.probabilities .* raw)
     centered = raw .- mu
+
     @printf("\n  [first exact full-Hilbert tree]\n")
     @printf("    prediction mean <f>_p        = % .6e\n", sum(a0.new.probabilities .* centered))
-    @printf("    max |centered - f|           = %.3e\n", maxabs(centered-f))
 
-    E_formula_centered = NV.exact_energy_eta(a0.new, X, flips, centered, ETA_TEST)
-    E_formula_raw = NV.exact_energy_eta(a0.new, X, flips, raw, ETA_TEST)
+    E_formula_centered = exact_energy_eta_local(a0.new, X, flips, centered, ETA_TEST, ratio, 1.0)
+    E_formula_raw = exact_energy_eta_local(a0.new, X, flips, raw, ETA_TEST, ratio, 1.0)
 
     model1 = deepcopy(model)
     push!(model1.logamp.trees, NV.scale_tree(tree, ETA_TEST))
@@ -101,18 +134,13 @@ function first_tree_audit(ratio, H, X, flips)
     @printf("    variational margin canonical  = %.3e\n", E_canonical_after-a0.Egs)
 
     return (
-        ratio=ratio,
-        epoch0_old=a0.old.E,
-        epoch0_new=a0.new.energy,
-        epoch0_canonical=a0.exact_model,
-        Egs=a0.Egs,
+        ratio=ratio, epoch0_old=a0.old.E, epoch0_new=a0.new.energy,
+        epoch0_canonical=a0.exact_model, Egs=a0.Egs,
         max_p_diff=maxabs(a0.new.probabilities-a0.old.p),
         max_eloc_diff=maxabs(a0.new.eloc-a0.old.eloc),
         max_target_diff=maxabs(a0.new.target-a0.old.y),
-        eta_energy_centered=E_formula_centered,
-        eta_energy_raw=E_formula_raw,
-        canonical_after_tree=E_canonical_after,
-        local_after_tree=a1.E,
+        eta_energy_centered=E_formula_centered, eta_energy_raw=E_formula_raw,
+        canonical_after_tree=E_canonical_after, local_after_tree=a1.E,
         eta_vs_canonical=E_formula_raw-E_canonical_after,
         eta_variational_violation=Int(E_formula_raw < a0.Egs-TOL),
         canonical_variational_violation=Int(E_canonical_after < a0.Egs-TOL),
@@ -137,7 +165,7 @@ function main()
     println("============================================================")
 
     X = NV.enumerate_states(N)
-    flips = NV.build_flip_index(X)
+    flips = build_flip_index_local(X)
     rows = NamedTuple[]
 
     for ratio in RATIOS
@@ -160,9 +188,9 @@ function main()
             r.eta_variational_violation,r.canonical_variational_violation)
     end
     println("\nInterpretation:")
-    println("  1) If epoch0_new-old != 0, exact_frozen_problem is wrong.")
-    println("  2) If epoch0 agrees but eta-canonical != 0, exact_energy_eta is wrong.")
-    println("  3) If both agree, the bug is later (tree application / stochastic Armijo path).")
+    println("  1) If epoch0_new-old != 0, frozen-state construction is wrong.")
+    println("  2) If epoch0 agrees but eta-canonical != 0, the hand-written eta-energy formula is wrong.")
+    println("  3) If both agree, the bug is later in the stochastic/update path.")
     println("\nResults written to experiments/results/old_new_energy_audit.csv")
 end
 

@@ -19,8 +19,8 @@ using GBTQuantum
     w = [1.0, 2.0, 1.5, 0.75, 3.0, 1.25, 2.5, 0.5]
     c = 7.314159265358979
 
-    t = grow_tree(X, y, w; max_depth=3)
-    tc = grow_tree(X, y .+ c, w; max_depth=3)
+    t = GBTQuantum.grow_tree(X, y, w; max_depth=3)
+    tc = GBTQuantum.grow_tree(X, y .+ c, w; max_depth=3)
 
     @test length(t.nodes) == length(tc.nodes)
 
@@ -33,14 +33,14 @@ using GBTQuantum
     end
 
     # 2. Before gauge fixing, every prediction must differ by exactly c.
-    pred = [predict(t, @view X[i, :]) for i in axes(X, 1)]
-    predc = [predict(tc, @view X[i, :]) for i in axes(X, 1)]
+    pred = [GBTQuantum.predict(t, @view X[i, :]) for i in axes(X, 1)]
+    predc = [GBTQuantum.predict(tc, @view X[i, :]) for i in axes(X, 1)]
     @test predc ≈ pred .+ c atol=1e-12 rtol=1e-12
 
     # Reproduce the weighted gauge fixing used by the optimizer:
     # subtract the weighted mean tree prediction from every leaf.
     function gauge_fixed_predictions(tree)
-        p = [predict(tree, @view X[i, :]) for i in axes(X, 1)]
+        p = [GBTQuantum.predict(tree, @view X[i, :]) for i in axes(X, 1)]
         μ = sum(w .* p) / sum(w)
         return p .- μ
     end

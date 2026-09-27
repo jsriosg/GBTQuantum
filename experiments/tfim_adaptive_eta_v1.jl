@@ -44,15 +44,11 @@ function scaled_tree(tree, eta)
 end
 
 # Estimate derivatives of E(eta) at eta=0 using the SAME empirical Born batch
-# that produced the weak learner. For real positive log-amplitude updates
-# psi_eta(x)=exp(eta*f(x))*psi(x), the first derivative is
-#   E'(0)=2 Cov_p(E_loc,f).
-# We estimate the second derivative by a symmetric local finite difference of
-# the exact-in-batch reweighted energy. This changes only the scalar step-size
-# proposal; it does not alter the fitted tree or sampling population.
+# that produced the weak learner. VMCBatch stores one local energy per compressed
+# unique state in `local_energy`, weighted by the corresponding `counts`.
 function batch_reweighted_energy(batch, f, eta)
     w0 = Float64.(batch.counts)
-    el = real.(batch.local_energies)
+    el = real.(batch.local_energy)
     z = 2.0 .* eta .* f
     zmax = maximum(z)
     rw = w0 .* exp.(z .- zmax)
@@ -62,7 +58,7 @@ end
 function adaptive_eta(batch, tree)
     f = [GBTQuantum.predict(tree, @view batch.states[j,:]) for j in axes(batch.states,1)]
     w = Float64.(batch.counts)
-    el = real.(batch.local_energies)
+    el = real.(batch.local_energy)
     W = sum(w)
     Ef = sum(w .* f) / W
     Ee = sum(w .* el) / W

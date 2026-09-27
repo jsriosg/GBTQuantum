@@ -7,14 +7,12 @@ using GBTQuantum
 using Random
 using Statistics
 using Printf
-using CSV
-using DataFrames
 
 include(joinpath(@__DIR__, "ExperimentUtils.jl"))
 using .ExperimentUtils
 
 # Diagnose WHY the oracle structural acquisition can become extremely
-# concentrated late in training.  In particular, decompose
+# concentrated late in training. In particular, decompose
 #
 #   A(x)^2 = sum_v P(v) G1_v Phi_v(x)^2
 #          = sum_v [G1_v/P(v)] I_v(x) phi_D,v(x)^2
@@ -39,6 +37,26 @@ const exact_min_leaf_weight = 1e-14
 const base_seed = 1_420_000
 const top_states_to_print = 12
 const top_nodes_to_print = 15
+
+# Lightweight CSV output so experiments do not require CSV.jl/DataFrames.jl.
+function csv_escape(x)
+    s = string(x)
+    if occursin(',', s) || occursin('"', s) || occursin('\n', s) || occursin('\r', s)
+        return "\"" * replace(s, "\"" => "\"\"") * "\""
+    end
+    return s
+end
+
+function write_namedtuple_csv(path, rows)
+    open(path, "w") do io
+        isempty(rows) && return
+        cols = propertynames(first(rows))
+        println(io, join(string.(cols), ","))
+        for row in rows
+            println(io, join((csv_escape(getproperty(row, c)) for c in cols), ","))
+        end
+    end
+end
 
 function exact_frozen_problem(H, model, X)
     p = exact_probabilities(model, X)
@@ -106,7 +124,6 @@ function conditional_oracle_gains(X, y, p, idx)
     return gain_landscape(X, y, pc, idx; min_weight=exact_min_leaf_weight), mass
 end
 
-# Conditional influence function of one candidate gain.
 function gain_influence(X, y, p, idx, f)
     mass = sum(p[idx])
     phi = zeros(Float64, size(X, 1))
@@ -208,7 +225,6 @@ function diagnose_concentration(H, model, X, run, epoch)
             max_contribution_state_q=(icontrib == 0 ? NaN : q[icontrib])))
     end
 
-    # Rank nodes by their largest pointwise contribution to A(x)^2.
     order_nodes = sortperm(node_rows, by=r -> r.max_A2_contribution, rev=true)
     println("  Top nodes by max contribution to A(x)^2:")
     for k in order_nodes[1:min(top_nodes_to_print, length(order_nodes))]
@@ -319,9 +335,9 @@ function main()
     nodefile = joinpath(outdir, "oracle_acquisition_concentration_nodes.csv")
     statefile = joinpath(outdir, "oracle_acquisition_concentration_states.csv")
     checkpointfile = joinpath(outdir, "oracle_acquisition_concentration_checkpoints.csv")
-    CSV.write(nodefile, DataFrame(all_nodes))
-    CSV.write(statefile, DataFrame(all_states))
-    CSV.write(checkpointfile, DataFrame(all_checkpoints))
+    write_namedtuple_csv(nodefile, all_nodes)
+    write_namedtuple_csv(statefile, all_states)
+    write_namedtuple_csv(checkpointfile, all_checkpoints)
 
     println("\nRESULTS WRITTEN TO")
     println(nodefile)

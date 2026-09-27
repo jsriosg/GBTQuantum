@@ -2,8 +2,7 @@
 # Julia generated files
 # ============================================
 *.ji
-
-# Keep Manifest.toml tracked for reproducible thesis experiments.
+Manifest.toml
 
 # ============================================
 # Experiment-generated results

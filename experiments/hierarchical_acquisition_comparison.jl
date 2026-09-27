@@ -173,9 +173,18 @@ function proposal_influence(fr,nodes)
     sum(q)>eps() ? regularize_proposal(q,p) : copy(p)
 end
 
-function node_sigmas(fr,nodes,q,M)
-    p=fr.probabilities
-    [sqrt(max(sum((p.^2).*n.Phi.^2./q)/M,0.0)) for n in nodes]
+function node_sigmas(fr, nodes, q, M)
+    p = fr.probabilities
+
+    return [
+        sqrt(
+            max(
+                sum((p .^ 2) .* (n.Phi .^ 2) ./ q) / M,
+                0.0
+            )
+        )
+        for n in nodes
+    ]
 end
 
 function recovery_probabilities(nodes,sigma)

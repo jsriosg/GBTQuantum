@@ -2,6 +2,8 @@ using Test
 using GBTQuantum
 using Random
 
+include("tree_translation_invariance.jl")
+
 @testset "Weighted raw-spin tree" begin
     X = Int8[-1 -1; -1 1; 1 -1; 1 1]
     y = [-1.0,-1.0,1.0,1.0]

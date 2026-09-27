@@ -46,8 +46,31 @@ const fixed_point_tol = 1e-8
 const fixed_point_maxiter = 500
 const fixed_point_damping = 0.5
 
-normal_pdf(z) = exp(-0.5*z*z) / sqrt(2*pi)
-normal_cdf(z) = 0.5 * erfc(-z/sqrt(2.0))
+normal_pdf(z) = exp(-0.5 * z * z) / sqrt(2 * pi)
+
+function normal_cdf(z)
+    # Abramowitz-Stegun approximation
+    # Maximum absolute error ~ 7.5e-8
+    t = 1.0 / (1.0 + 0.2316419 * abs(z))
+
+    d = 0.3989422804014327 * exp(-0.5 * z * z)
+
+    p = d * t * (
+        0.319381530 +
+        t * (
+            -0.356563782 +
+            t * (
+                1.781477937 +
+                t * (
+                    -1.821255978 +
+                    t * 1.330274429
+                )
+            )
+        )
+    )
+
+    return z >= 0.0 ? 1.0 - p : p
+end
 
 function csv_escape(x)
     s=string(x)

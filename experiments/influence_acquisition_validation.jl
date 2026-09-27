@@ -250,6 +250,7 @@ function run_training(run,X)
     end
     return rows
 end
+
 function main()
     println("\n============================================================");println("INFLUENCE-FUNCTION ACQUISITION VALIDATION")
     println("N=$N J/h=$(J/h) runs=$ntraining_runs checkpoints=$(sort(collect(checkpoint_epochs)))")
@@ -260,6 +261,11 @@ function main()
     outdir=joinpath(@__DIR__,"results");mkpath(outdir);path=joinpath(outdir,"influence_acquisition_validation.csv");write_namedtuple_csv(path,rows)
     println("\nResults written to experiments/results/influence_acquisition_validation.csv")
 end
+
 export main,run_training,diagnose
+
 end
-if abspath(PROGRAM_FILE)==@__FILE__ InfluenceAcquisitionValidationExperiment.main() end
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    InfluenceAcquisitionValidationExperiment.main()
+end

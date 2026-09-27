@@ -119,11 +119,11 @@ function run_training_fixed(run,X)
         tree = GBTQuantum.grow_tree(batch.states,yA,w;
             max_depth=G.optimizer_max_depth,min_weight=G.optimizer_min_leaf_weight,
             min_gain=G.optimizer_min_gain)
-        pred = predict_all(tree,batch.states); mu=weighted_mean(pred,w)
+        pred = U.predict_all(tree,batch.states); mu=U.weighted_mean(pred,w)
         if isfinite(mu) && mu != 0
-            tree=shift_tree_leaves(tree,mu)
+            tree=U.shift_tree_leaves(tree,mu)
         end
-        push!(model.logamp.trees,scale_tree(tree,G.eta))
+        push!(model.logamp.trees,U.scale_tree(tree,G.eta))
         GBTQuantum.refresh_logamps!(logamps,model,samples)
         for _ in 1:G.sweeps_per_epoch
             GBTQuantum.sweep!(rng,model,samples,logamps)

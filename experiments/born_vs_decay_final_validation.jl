@@ -107,10 +107,6 @@ function run_one(policy,rep,X,flips)
             GBTQuantum.sweep!(rng,model,samples,logamps)
         end
 
-        # Exact benchmark diagnostics below are NEVER used to make the operational
-        # acceptance decision. They let us quantify stochastic Armijo mistakes.
-        # The signed exact Armijo slack is <=0 when the exact sufficient-decrease
-        # inequality E(eta) <= E(0)+alpha*eta*g is satisfied.
         alpha = 0.1
         exact_armijo_rhs = true_before + alpha*eta*g
         exact_armijo_slack = true_after - exact_armijo_rhs
@@ -126,7 +122,9 @@ function run_one(policy,rep,X,flips)
             represented_born_mass=born_mass,backtracks=mc.back,refinements=mc.refine,
             budget_exhausted=Int(mc.reason=="budget_exhausted"),
             cumulative_accepted=accepted_count,cumulative_false_accepts=false_accept_count,
-            baseline_mean=base.mean,baseline_se=base.se,baseline_tau=base.tau,
+            baseline_E0=base.E0,baseline_se_iid=base.se_iid,
+            baseline_se_tau=base.se_tau,baseline_tau=base.tau,
+            baseline_neff=base.neff,baseline_n=base.n,
             armijo_reason=mc.reason,
         ))
 
@@ -156,7 +154,6 @@ function summarize(rows)
             p.name,mean(ef),std(ef),mean(costs),acc,fa,nacc,farate)
     end
 
-    # Paired endpoint difference: same repetition index shares initial state.
     born=Dict(r.repetition=>r.energy_after for r in rows if r.policy=="born" && r.epoch==NV.nepochs)
     decay=Dict(r.repetition=>r.energy_after for r in rows if r.policy=="uniform_decay" && r.epoch==NV.nepochs)
     reps=sort!(collect(intersect(keys(born),keys(decay))))

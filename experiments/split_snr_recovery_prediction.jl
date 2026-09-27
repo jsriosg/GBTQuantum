@@ -286,8 +286,15 @@ function diagnose(H,model,X,run,epoch)
             end
 
             for (j,n) in enumerate(nodes)
-                s_pred=prod(rho_pred[nodepos[a]] for a in n.ancestor_indices)
-                s_ind_emp=prod(rho_emp[nodepos[a]] for a in n.ancestor_indices)
+                s_pred = prod(
+                    (rho_pred[nodepos[a]] for a in n.ancestor_indices);
+                    init=1.0
+                )
+
+                s_ind_emp = prod(
+                    (rho_emp[nodepos[a]] for a in n.ancestor_indices);
+                    init=1.0
+                )
                 varpred=predicted_margin_variance(fr,n,q,M)
                 sigpred=sqrt(max(varpred,0.0))
                 zpred=sigpred>0 ? n.margin/sigpred : (n.margin>0 ? Inf : 0.0)
@@ -311,8 +318,27 @@ function diagnose(H,model,X,run,epoch)
             valid=collect(eachindex(nodes))
             mae_rho=mean(abs(rho_emp[j]-rho_pred[j]) for j in valid)
             nonroot=[j for j in valid if nodes[j].node_depth>0]
-            mae_path=mean(abs(s_emp[j]-prod(rho_pred[nodepos[a]] for a in nodes[j].ancestor_indices)) for j in nonroot)
-            mae_empind=mean(abs(s_emp[j]-prod(rho_emp[nodepos[a]] for a in nodes[j].ancestor_indices)) for j in nonroot)
+            mae_path = mean(
+                abs(
+                    s_emp[j] -
+                    prod(
+                        (rho_pred[nodepos[a]] for a in nodes[j].ancestor_indices);
+                        init=1.0
+                    )
+                )
+                for j in nonroot
+            )
+
+            mae_empind = mean(
+                abs(
+                    s_emp[j] -
+                    prod(
+                        (rho_emp[nodepos[a]] for a in nodes[j].ancestor_indices);
+                        init=1.0
+                    )
+                )
+                for j in nonroot
+            )
             @printf("  alpha=%.1f M=%4d  rho MAE=%.3f  path MAE(pred)=%.3f  path MAE(emp-ind)=%.3f\n",
                     alpha,M,mae_rho,mae_path,mae_empind)
         end

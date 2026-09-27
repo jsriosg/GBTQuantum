@@ -16,12 +16,12 @@ using .ExperimentUtils
 include(joinpath(@__DIR__, "greedy_node_local_acquisition.jl"))
 const G = GreedyNodeLocalAcquisitionExperiment
 
-const z_thresholds = [0.0, 1.0, 2.0, 3.0, Inf]
+const z_thresholds = [0.0, 2.0, Inf]
 const acquisition_batch = 128
 const max_rounds_per_node = 4
 const min_pilot_in_node = 16
 const local_pilot_target = 64
-const repetitions = 200
+const repetitions = 20
 const output_name = "sequential_node_local_acquisition.csv"
 
 # IMPORTANT correction relative to the first prototype:

@@ -20,32 +20,10 @@ const policies = ["batch_iid", "batch_tau"]
 common_seed(run,epoch,name,rep) =
     960_000_000 + 10_000_000*run + 100_000*epoch + rep + sum(codeunits(name))
 
-function tau_int_ips(x::AbstractVector{<:Real})
-    n=length(x)
-    n < 4 && return 0.5
-    y=Float64.(x) .- mean(x)
-    gamma0=sum(abs2,y)/n
-    gamma0 <= eps() && return 0.5
-    maxlag=min(n-1, max(2, n÷4))
-    rho=Vector{Float64}(undef,maxlag)
-    @inbounds for lag in 1:maxlag
-        rho[lag]=dot(@view(y[1:n-lag]),@view(y[1+lag:n]))/((n-lag)*gamma0)
-    end
-    s=0.0; k=1
-    while k <= maxlag
-        pair=rho[k]+(k+1<=maxlag ? rho[k+1] : 0.0)
-        pair <= 0 && break
-        s += pair; k += 2
-    end
-    max(0.5,0.5+s)
-end
-
 function chronological_local_energies(H,model,samples)
     n=size(samples,1)
     e=Vector{Float64}(undef,n)
     @inbounds for i in 1:n
-        # VMC.jl defines local_energy! (not local_energy).  Keep the original
-        # walker ordering so the autocorrelation calculation is meaningful.
         e[i]=real(GBTQuantum.local_energy!(H,model,@view(samples[i,:])))
     end
     e
@@ -53,12 +31,17 @@ end
 
 function baseline_stats(H,model,samples)
     e=chronological_local_energies(H,model,samples)
-    n=length(e); E0=mean(e)
+    n=length(e)
+    E0=mean(e)
     v=n>1 ? var(e;corrected=true) : 0.0
-    tau=tau_int_ips(e)
-    neff=min(Float64(n),max(1.0,n/(2tau)))
+
+    # Reuse the canonical VMC diagnostics from GBTQuantum rather than keeping
+    # an experiment-local autocorrelation implementation.
+    tau=GBTQuantum.integrated_autocorrelation_time(e)
+    neff=GBTQuantum.effective_sample_size(e)
     se_iid=sqrt(max(v,0.0)/n)
-    se_tau=sqrt(max(v,0.0)/neff)
+    se_tau=GBTQuantum.energy_standard_error(e)
+
     (E0=E0,se_iid=se_iid,se_tau=se_tau,tau=tau,neff=neff,n=n)
 end
 
@@ -68,7 +51,7 @@ function armijo(rng,fr,X,flips,f,g,c,base,policy)
     se0=policy=="batch_iid" ? base.se_iid : base.se_tau
     total=0; refine=0; back=0
     for _ in 0:SC.max_backtracks
-        veta=Float64[]; previous=0; rejected=false
+        veta=Float64[]; previous=0
         for budget in (256,512)
             add=budget-previous
             SC.draw_energies!(rng,veta,fr,X,flips,f,eta,add)
@@ -80,7 +63,7 @@ function armijo(rng,fr,X,flips,f,g,c,base,policy)
             if hi < 0
                 return (eta=eta,accepted=true,total=total,refine=refine,back=back)
             elseif lo > 0
-                rejected=true; break
+                break
             elseif budget==256
                 refine += 1
             end
@@ -169,7 +152,7 @@ function main()
     println("AUTOCORRELATION-AWARE BATCH E(0) ARMIJO VALIDATION")
     println("Compare iid batch SE against integrated-autocorrelation corrected SE")
     println("Armijo candidate budget 256 -> 512, z=$zcrit, repetitions=$repetitions")
-    println("Also logs tau_int and effective batch size at every checkpoint")
+    println("Autocorrelation, ESS, and SE use the canonical GBTQuantum VMC diagnostics")
     println("Keep proposal families separate: this diagnoses optimizer uncertainty; it does not assume p*y^2 is desirable")
     println("============================================================")
     X=NV.enumerate_states(NV.N); flips=NV.build_flip_index(X); rows=NamedTuple[]

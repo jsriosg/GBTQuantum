@@ -4,13 +4,14 @@ Pkg.activate(joinpath(@__DIR__, ".."))
 module OldNewEnergyAudit
 
 using GBTQuantum
-using Random
 using Statistics
 using Printf
 
-# Reuse the exact helper functions that the NEW experimental path actually uses.
-include(joinpath(@__DIR__, "newton_step_validation.jl"))
-const NV = NewtonStepValidationExperiment
+# Use the shared experiment helpers explicitly. exact_probabilities, predict_all,
+# scale_tree, and enumerate_states live in ExperimentUtils; they are not exports
+# of the GBTQuantum package itself.
+include(joinpath(@__DIR__, "ExperimentUtils.jl"))
+using .ExperimentUtils
 
 const N = 8
 const RATIOS = [0.05, 0.10, 0.25, 0.50, 1.00, 2.00]
@@ -18,11 +19,7 @@ const ETA_TEST = 0.05
 const TOL = 1e-10
 
 maxabs(v) = maximum(abs.(v))
-rms(v) = sqrt(mean(abs2, v))
 
-# IMPORTANT: NV.build_flip_index is tied to the N=12 constant of
-# newton_step_validation.jl. This audit intentionally uses N=8 to match the
-# old-pipeline coupling diagnostic, so the flip table must infer its width from X.
 function build_flip_index_local(X)
     nstates, nspins = size(X)
     index = Dict{Tuple{Vararg{Int8}},Int}()
@@ -38,10 +35,6 @@ function build_flip_index_local(X)
     flips
 end
 
-# The imported NV.exact_energy_eta is likewise tied to NV.N=12 and NV.J=2.
-# For this audit we need the same formula, but parameterized by the actual H
-# used at each N=8 coupling. This isolates the formula without silently mixing
-# constants from a different experiment.
 function exact_energy_eta_local(fr, X, flips, f, eta, J, h)
     nspins = size(X,2)
     z = fr.logamp .+ eta .* f
@@ -64,7 +57,7 @@ function exact_energy_eta_local(fr, X, flips, f, eta, J, h)
 end
 
 function old_exact_vectors(H, model, X)
-    p = GBTQuantum.exact_probabilities(model, X)
+    p = exact_probabilities(model, X)
     loga = Float64[GBTQuantum.logamplitude(model, @view(X[i,:])) for i in axes(X,1)]
     eloc = Float64[real(GBTQuantum.local_energy!(H, model, @view(X[i,:]))) for i in axes(X,1)]
     E = sum(p .* eloc)
@@ -73,7 +66,7 @@ function old_exact_vectors(H, model, X)
 end
 
 function exact_frozen_problem_local(H, model, X)
-    p = GBTQuantum.exact_probabilities(model, X)
+    p = exact_probabilities(model, X)
     loga = Float64[GBTQuantum.logamplitude(model, @view(X[i,:])) for i in axes(X,1)]
     eloc = ComplexF64[GBTQuantum.local_energy!(H, model, @view(X[i,:])) for i in axes(X,1)]
     E = real(sum(p .* eloc))
@@ -109,7 +102,7 @@ function first_tree_audit(ratio, H, X, flips)
 
     tree = GBTQuantum.grow_tree(X, a0.new.target, a0.new.probabilities;
         max_depth=4, min_weight=1e-14, min_gain=0.0)
-    raw = NV.predict_all(tree, X)
+    raw = predict_all(tree, X)
     mu = sum(a0.new.probabilities .* raw)
     centered = raw .- mu
 
@@ -120,7 +113,7 @@ function first_tree_audit(ratio, H, X, flips)
     E_formula_raw = exact_energy_eta_local(a0.new, X, flips, raw, ETA_TEST, ratio, 1.0)
 
     model1 = deepcopy(model)
-    push!(model1.logamp.trees, NV.scale_tree(tree, ETA_TEST))
+    push!(model1.logamp.trees, scale_tree(tree, ETA_TEST))
     E_canonical_after = real(GBTQuantum.exact_model_energy(model1, H).energy)
     a1 = old_exact_vectors(H, model1, X)
 
@@ -164,7 +157,7 @@ function main()
     println("No Monte Carlo. No Armijo. Full Hilbert enumeration only.")
     println("============================================================")
 
-    X = NV.enumerate_states(N)
+    X = enumerate_states(N)
     flips = build_flip_index_local(X)
     rows = NamedTuple[]
 

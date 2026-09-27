@@ -51,7 +51,28 @@ const base_seed = 1_520_000
 const diagnostic_seed_base = 31_520_000
 const support_floor = 1e-14
 
-normal_cdf(z) = 0.5 * erfc(-z / sqrt(2.0))
+function normal_cdf(z::Real)
+    z == Inf && return 1.0
+    z == -Inf && return 0.0
+    isnan(z) && return NaN
+
+    x = Float64(z)
+    ax = abs(x)
+    t = 1.0 / (1.0 + 0.2316419 * ax)
+
+    poly = t * (
+        0.319381530 +
+        t * (-0.356563782 +
+        t * (1.781477937 +
+        t * (-1.821255978 +
+        t * 1.330274429)))
+    )
+
+    tail = exp(-0.5 * ax^2) / sqrt(2π) * poly
+    cdf_positive = 1.0 - tail
+
+    return x >= 0 ? cdf_positive : 1.0 - cdf_positive
+end
 
 function csv_escape(x)
     s = string(x)

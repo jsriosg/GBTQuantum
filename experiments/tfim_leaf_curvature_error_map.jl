@@ -43,9 +43,9 @@ function exact_oracle(H,m,t,X)
    k=flip(j,i); r=exp(A[k]-A[j]); el[j]-=H.h*r; hf[j]-=H.h*r*f[k]
   end
  end
- Ef=sum(p.*f); E=sum(p.*el); Ef2=sum(p.*f.^2); Ef2el=sum(p.*f.^2.*el); Efhf=sum(p.*f.*hf)
- g=2sum(p.*(f.-Ef).*(el.-E))
- c=2Ef2el+2Efhf-4E*Ef2-4Ef*g
+ Ef=sum(p .* f); E=sum(p .* el); Ef2=sum(p .* f.^2); Ef2el=sum(p .* f.^2 .* el); Efhf=sum(p .* f .* hf)
+ g=2 * sum(p .* (f .- Ef) .* (el .- E))
+ c=2 * Ef2el + 2 * Efhf - 4 * E * Ef2 - 4 * Ef * g
  (;A,p,f,leaf,el,hf,Ef,E,Ef2,g,c)
 end
 
@@ -57,13 +57,12 @@ function sample_arrays(H,m,t,b)
   for i=1:H.N; x[i]=-x[i]; z-=H.h*exp(GBTQuantum.logamplitude(m,x)-A)*GBTQuantum.predict(t,x); x[i]=-x[i]; end
   hf[j]=z
  end
- Ef=sum(w.*f)/W; E=sum(w.*el)/W; g=2sum(w.*(f.-Ef).*(el.-E))/W
- Ef2=sum(w.*f.^2)/W; c=2sum(w.*f.^2.*el)/W + 2sum(w.*f.*hf)/W - 4E*Ef2 - 4Ef*g
+ Ef=sum(w .* f)/W; E=sum(w .* el)/W; g=2 * sum(w .* (f .- Ef) .* (el .- E))/W
+ Ef2=sum(w .* f.^2)/W; c=2 * sum(w .* f.^2 .* el)/W + 2 * sum(w .* f .* hf)/W - 4 * E * Ef2 - 4 * Ef * g
  (;w,W,f,leaf,hf,el,Ef,E,g,c)
 end
 
 function neighbor_coverage(H,b,X,leaf_exact)
- # State is "represented" if it occurs as a unique root in the compressed batch.
  represented=Set{Int}()
  for j in axes(b.states,1)
   s=0; for i=1:H.N; b.states[j,i]>0 && (s |= 1<<(i-1)); end; push!(represented,s+1)
@@ -82,20 +81,18 @@ function audit(H,m,t,b,X,ratio,ep,shift)
  @printf("J/h=%.2f epoch=%d | production gauge shift=% .6e | <f>_MC=% .3e | <f>_exact=% .3e\n",ratio,ep,shift,sm.Ef,ex.Ef)
  @printf("total exact g=% .6e c=% .6e | MC g=% .6e c=% .6e | delta_c=% .6e\n",ex.g,ex.c,sm.g,sm.c,sm.c-ex.c)
 
- # Exact additive decomposition using the SAME sample-gauge-fixed f. The final
- # global -4<Ef>g term is allocated by leaf Born mass so leaf sums equal total c.
  leaves=sort(unique(ex.leaf)); rows=NamedTuple[]
  for L in leaves
   ix=findall(==(L),ex.leaf); mass=sum(ex.p[ix]); fL=ex.f[first(ix)]
-  cex=sum(2 .* ex.p[ix].*ex.f[ix].^2.*ex.el[ix] .+ 2 .* ex.p[ix].*ex.f[ix].*ex.hf[ix] .- 4 .* ex.E .* ex.p[ix].*ex.f[ix].^2) - 4*ex.Ef*ex.g*mass
-  gex=2sum(ex.p[ix].*(ex.f[ix].-ex.Ef).*(ex.el[ix].-ex.E))
+  cex=sum(2 .* ex.p[ix] .* ex.f[ix].^2 .* ex.el[ix] .+ 2 .* ex.p[ix] .* ex.f[ix] .* ex.hf[ix] .- 4 .* ex.E .* ex.p[ix] .* ex.f[ix].^2) - 4 * ex.Ef * ex.g * mass
+  gex=2 * sum(ex.p[ix] .* (ex.f[ix] .- ex.Ef) .* (ex.el[ix] .- ex.E))
 
   im=findall(==(L),sm.leaf); mw=sum(sm.w[im]); mmass=mw/sm.W
   if isempty(im)
-   gmc=0.0; cmc=-4*sm.Ef*sm.g*mmass
+   gmc=0.0; cmc=-4 * sm.Ef * sm.g * mmass
   else
-   gmc=2sum(sm.w[im].*(sm.f[im].-sm.Ef).*(sm.el[im].-sm.E))/sm.W
-   cmc=sum(2 .* sm.w[im].*sm.f[im].^2.*sm.el[im] .+ 2 .* sm.w[im].*sm.f[im].*sm.hf[im] .- 4 .* sm.E .* sm.w[im].*sm.f[im].^2)/sm.W - 4*sm.Ef*sm.g*mmass
+   gmc=2 * sum(sm.w[im] .* (sm.f[im] .- sm.Ef) .* (sm.el[im] .- sm.E))/sm.W
+   cmc=sum(2 .* sm.w[im] .* sm.f[im].^2 .* sm.el[im] .+ 2 .* sm.w[im] .* sm.f[im] .* sm.hf[im] .- 4 .* sm.E .* sm.w[im] .* sm.f[im].^2)/sm.W - 4 * sm.Ef * sm.g * mmass
   end
   hit,total,coverage=cov[L]; dc=cmc-cex
   push!(rows,(ratio=ratio,epoch=ep,leaf=L,f=fL,absf=abs(fL),train_weight=mw,train_mass=mmass,exact_born_mass=mass,mass_error=mmass-mass,neighbor_hits=hit,neighbor_edges=total,neighbor_coverage=coverage,g_exact_leaf=gex,g_mc_leaf=gmc,g_error_leaf=gmc-gex,c_exact_leaf=cex,c_mc_leaf=cmc,c_error_leaf=dc,abs_c_error_leaf=abs(dc),exact_mean_f=ex.Ef,mc_mean_f=sm.Ef,g_exact=ex.g,g_mc=sm.g,c_exact=ex.c,c_mc=sm.c))
@@ -104,7 +101,7 @@ function audit(H,m,t,b,X,ratio,ep,shift)
  ord=sortperm(rows,by=r->r.abs_c_error_leaf,rev=true)
  println(" Top leaves by |delta c_L|:")
  for k in ord[1:min(8,length(ord))]
-  r=rows[k]; @printf("  leaf=%3d dC=% .3e Cex=% .3e Cmc=% .3e support=%6.1f p=% .3e mass_err=% .3e f=% .3e neigh_cov=%6.2f%%\n",r.leaf,r.c_error_leaf,r.c_exact_leaf,r.c_mc_leaf,r.train_weight,r.exact_born_mass,r.mass_error,r.f,100r.neighbor_coverage)
+  r=rows[k]; @printf("  leaf=%3d dC=% .3e Cex=% .3e Cmc=% .3e support=%6.1f p=% .3e mass_err=% .3e f=% .3e neigh_cov=%6.2f%%\n",r.leaf,r.c_error_leaf,r.c_exact_leaf,r.c_mc_leaf,r.train_weight,r.exact_born_mass,r.mass_error,r.f,100 * r.neighbor_coverage)
  end
  rows
 end

@@ -12,6 +12,11 @@ using Printf
 # one-dimensional variational energy E(eta) with the local quadratic model
 # E(0) + g*eta + 0.5*c*eta^2. The training trajectory itself remains the
 # canonical fixed-eta=0.05 trajectory.
+#
+# IMPORTANT: g and c are evaluated analytically from the full Hilbert-space
+# distribution. We deliberately do not obtain the curvature by subtracting
+# three nearly equal energies, which was numerically unstable in the first
+# version of this diagnostic.
 
 const RATIOS = [0.05, 0.5, 1.0, 2.0]
 const N = 8
@@ -54,8 +59,10 @@ function all_states(N)
     return X
 end
 
-# Exact energy along A_eta(x)=A(x)+eta*f(x), without modifying the model.
-function exact_path_energy(H, model, tree, states, eta)
+# Precompute A(x) and f(x) on the complete Hilbert space. Besides avoiding
+# repeated tree/model evaluation, this prevents accidental mutation of a state
+# view while looking up single-spin-flip neighbours.
+function exact_path_data(model, tree, states)
     d = size(states,1)
     A = Vector{Float64}(undef,d)
     f = Vector{Float64}(undef,d)
@@ -64,7 +71,16 @@ function exact_path_energy(H, model, tree, states, eta)
         A[j] = GBTQuantum.logamplitude(model,x)
         f[j] = GBTQuantum.predict(tree,x)
     end
+    return A,f
+end
 
+# With the enumeration used by all_states, flipping spin i toggles bit i-1,
+# hence the zero-based state index s maps to s xor 2^(i-1).
+@inline flipped_row(j, i) = ((j-1) ⊻ (1 << (i-1))) + 1
+
+# Exact energy along A_eta(x)=A(x)+eta*f(x), without modifying model/states.
+function exact_path_energy(H, states, A, f, eta)
+    d = size(states,1)
     logw = 2.0 .* (A .+ eta .* f)
     shift = maximum(logw)
     w = exp.(logw .- shift)
@@ -76,38 +92,83 @@ function exact_path_energy(H, model, tree, states, eta)
         Aeta0 = A[j] + eta*f[j]
         el = GBTQuantum.diagonal(H,x)
         for i in 1:H.N
-            x[i] = -x[i]
-            Aetai = GBTQuantum.logamplitude(model,x) + eta*GBTQuantum.predict(tree,x)
+            k = flipped_row(j,i)
+            Aetai = A[k] + eta*f[k]
             el -= H.h * exp(Aetai-Aeta0)
-            x[i] = -x[i]
         end
         Esum += w[j]*el
     end
     return Esum/Z
 end
 
-# Exact derivatives at eta=0 from the full Hilbert-space distribution. These
-# derivatives define the quadratic approximation independently of MC noise.
-function exact_derivatives(H, model, tree, states; delta=1e-3)
-    Em = exact_path_energy(H,model,tree,states,-delta)
-    E0 = exact_path_energy(H,model,tree,states,0.0)
-    Ep = exact_path_energy(H,model,tree,states,delta)
-    g = (Ep-Em)/(2delta)
-    c = (Ep-2E0+Em)/delta^2
+# Exact full-Hilbert-space derivatives for
+#     psi_eta(x) = psi(x) exp(eta f(x)).
+#
+# g = 2 Cov(f,E_loc)
+# c = 2 <f^2 E_loc> + 2 <f E_loc^(f)>
+#     - 4 E <f^2> - 4 <f> g
+#
+# These are the same derivatives validated in tfim_eta_curvature_audit.jl, but
+# here all expectations are evaluated over the exact Born distribution.
+function exact_derivatives(H, states, A, f)
+    d = size(states,1)
+    shift = maximum(2.0 .* A)
+    w = exp.(2.0 .* A .- shift)
+    W = sum(w)
+
+    sum_f = 0.0
+    sum_f2 = 0.0
+    sum_el = 0.0
+    sum_fel = 0.0
+    sum_f2el = 0.0
+    sum_felf = 0.0
+
+    @inbounds for j in 1:d
+        x = @view states[j,:]
+        fj = f[j]
+        el = GBTQuantum.diagonal(H,x)
+        elf = GBTQuantum.diagonal(H,x)*fj
+
+        for i in 1:H.N
+            k = flipped_row(j,i)
+            ratio = exp(A[k]-A[j])
+            el -= H.h*ratio
+            elf -= H.h*ratio*f[k]
+        end
+
+        wj = w[j]
+        sum_f += wj*fj
+        sum_f2 += wj*fj*fj
+        sum_el += wj*el
+        sum_fel += wj*fj*el
+        sum_f2el += wj*fj*fj*el
+        sum_felf += wj*fj*elf
+    end
+
+    Ef = sum_f/W
+    Ef2 = sum_f2/W
+    E0 = sum_el/W
+    Efel = sum_fel/W
+    Ef2el = sum_f2el/W
+    Qf = sum_felf/W
+
+    g = 2.0*(Efel-Ef*E0)
+    c = 2.0*Ef2el + 2.0*Qf - 4.0*E0*Ef2 - 4.0*Ef*g
     return E0,g,c
 end
 
 function profile_rows(H, model, tree, states, ratio, epoch)
-    E0,g,c = exact_derivatives(H,model,tree,states)
+    A,f = exact_path_data(model,tree,states)
+    E0,g,c = exact_derivatives(H,states,A,f)
     etaN = isfinite(g) && isfinite(c) && c > CURVATURE_FLOOR ? -g/c : NaN
 
-    # Also evaluate the exact energy at the unconstrained Newton proposal when
-    # finite/nonnegative, even if it lies outside the display grid.
-    EN = isfinite(etaN) && etaN >= 0.0 ? exact_path_energy(H,model,tree,states,etaN) : NaN
+    # Evaluate the exact energy at the unconstrained Newton proposal when it is
+    # a finite nonnegative step, even when it is outside ETA_GRID.
+    EN = isfinite(etaN) && etaN >= 0.0 ? exact_path_energy(H,states,A,f,etaN) : NaN
 
     rows = NamedTuple[]
     for eta in ETA_GRID
-        E = exact_path_energy(H,model,tree,states,eta)
+        E = exact_path_energy(H,states,A,f,eta)
         Equad = E0 + g*eta + 0.5*c*eta^2
         push!(rows,(
             ratio=ratio, epoch=epoch, eta=eta,
@@ -185,6 +246,7 @@ function main()
     println("N=$N ratios=$RATIOS epochs=$(sort!(collect(AUDIT_EPOCHS)))")
     println("eta grid=$ETA_GRID")
     println("Training remains canonical fixed eta=$ETA_FIXED")
+    println("Derivative oracle: analytic full-Hilbert-space expectations")
     println("="^72)
 
     states = all_states(N)

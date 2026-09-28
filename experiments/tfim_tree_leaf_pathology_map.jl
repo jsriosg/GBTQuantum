@@ -28,7 +28,6 @@ function leaf_index(t,x)
  i=1
  while true
   n=t.nodes[i]; n.isleaf && return i
-  # grow_tree uses spin feature values; reproduce predict traversal.
   i = x[n.feature] <= 0 ? n.left : n.right
  end
 end
@@ -50,7 +49,7 @@ end
 function exact_arrays(H,m,t,X)
  d=size(X,1); A=zeros(d); f=zeros(d); leaf=zeros(Int,d)
  for j=1:d; x=@view X[j,:]; A[j]=GBTQuantum.logamplitude(m,x); f[j]=GBTQuantum.predict(t,x); leaf[j]=leaf_index(t,x); end
- p=exp.(2A .- maximum(2A)); p./=sum(p); f .-= sum(p.*f) # exact gauge
+ p=exp.(2A .- maximum(2A)); p./=sum(p); f .-= sum(p.*f)
  el=zeros(d); ef=zeros(d)
  for j=1:d
   e=GBTQuantum.diagonal(H,@view X[j,:]); q=GBTQuantum.diagonal(H,@view X[j,:])*f[j]
@@ -58,15 +57,14 @@ function exact_arrays(H,m,t,X)
   el[j]=e; ef[j]=q
  end
  E=sum(p.*el); g=2sum(p.*f.*el); f2=sum(p.*f.^2)
- # Per-root canonical curvature contribution under p, summing exactly to c.
- Croot=2p.*f.^2.*el + 2p.*f.*ef - 4E.*p.*f.^2
+ # Explicit broadcast operators avoid Julia's ambiguous numeric-literal/broadcast parsing.
+ Croot = 2 .* p .* f.^2 .* el .+ 2 .* p .* f .* ef .- 4 .* E .* p .* f.^2
  c=sum(Croot)
  A,p,f,leaf,el,ef,E,g,f2,Croot,c
 end
 
 function audit(H,m,t,b,X,ratio,ep,gmc,cmc,mode)
  A,p,f,leaf,el,ef,E,g,f2,Croot,c=exact_arrays(H,m,t,X)
- # Training support per leaf: unique sampled configurations and multiplicity weight.
  train_unique=Dict{Int,Int}(); train_weight=Dict{Int,Float64}()
  for j in axes(b.states,1)
   l=leaf_index(t,@view b.states[j,:]); train_unique[l]=get(train_unique,l,0)+1; train_weight[l]=get(train_weight,l,0.0)+Float64(b.counts[j])
@@ -76,13 +74,12 @@ function audit(H,m,t,b,X,ratio,ep,gmc,cmc,mode)
  @printf("J/h=%.2f epoch=%d mode=%s | MC g=% .4e c=% .4e | exact-centered g=% .4e c=% .4e eta=% .5f\n",ratio,ep,String(mode),gmc,cmc,g,c,(g<0&&c>0 ? -g/c : NaN))
  @printf("Gauge <f>=% .3e | leaves=%d | max|f(state)|=% .4e | <f^2>=% .4e\n",sum(p.*f),length(leaves),maximum(abs.(f)),f2)
  for l in leaves
-  idx=findall(==(l),leaf); mass=sum(p[idx]); fv=f[first(idx)] # tree constant in leaf before exact gauge, still constant after shift
-  gf=sum(2 .* p[idx].*f[idx].*el[idx]); cf=sum(Croot[idx]); f2l=sum(p[idx].*f[idx].^2)
+  idx=findall(==(l),leaf); mass=sum(p[idx]); fv=f[first(idx)]
+  gf=sum(2 .* p[idx] .* f[idx] .* el[idx]); cf=sum(Croot[idx]); f2l=sum(p[idx] .* f[idx].^2)
   tw=get(train_weight,l,0.0); tu=get(train_unique,l,0); exactstates=length(idx)
   @printf(" leaf=%3d f=% .4e train_weight=%6.1f train_unique=%3d exact_states=%3d Born_mass=% .4e <f2>part=% .4e g_part=% .4e c_part=% .4e\n",l,fv,tw,tu,exactstates,mass,f2l,gf,cf)
   push!(rows,(ratio=ratio,epoch=ep,leaf=l,f=fv,absf=abs(fv),train_weight=tw,train_unique=tu,exact_states=exactstates,born_mass=mass,f2_contribution=f2l,g_contribution=gf,c_contribution=cf,abs_c_contribution=abs(cf),E_exact=E,g_exact=g,c_exact=c,eta_exact=(g<0&&c>0 ? -g/c : NaN),mc_g=gmc,mc_c=cmc,mode=String(mode)))
  end
- # Compact ranking to make pathology visible immediately.
  ord=sortperm(rows,by=r->r.absf,rev=true)
  println(" Top leaves by |f|:")
  for k in ord[1:min(5,length(ord))]; r=rows[k]; @printf("   leaf=%3d |f|=% .3e support=%5.1f Born=% .3e |c_part|=% .3e\n",r.leaf,r.absf,r.train_weight,r.born_mass,r.abs_c_contribution); end

@@ -72,7 +72,7 @@ function mc_derivatives(H,m,b,t)
  g=2sum(w .* (f  .-  Ef) .* (el  .-  E))/W
  f2=sum(w  .*  f  .^  2)/W; f2e=sum(w  .*  f  .^  2 .*  el)/W
  q=sum(w[j]*f[j]*f_local(H,m,t,@view b.states[j,:]) for j in axes(b.states,1))/W
- c=2f2e+2q-4E*f2-4Ef*g
+ c = 2 * f2e + 2 * q - 4 * E * f2 - 4 * Ef * g
  (g=g,c=c,meanf=Ef)
 end
 
@@ -94,7 +94,7 @@ function exact_derivatives(H,m,t,X)
   end
  end
  Ef=sum(p  .*  f); E=sum(p .*  el); g=2sum(p .* (f  .-  Ef) .* (el  .-  E))
- c=2sum(p  .*  f  .^  2 .*  el)+2sum(p  .*  f .*  hf)-4E*sum(p  .*  f  .^  2)-4Ef*g
+ c = 2 * sum(p .* f .^ 2 .* el) + 2 * sum(p .* f .* hf) - 4 * E * sum(p .* f .^ 2) - 4 * Ef * g
  (g=g,c=c,meanf=Ef,E=E)
 end
 

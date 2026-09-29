@@ -7,7 +7,7 @@ using GBTQuantum, Random, Statistics, Printf
 #
 # g = 2(<f E_loc> - <f>E) = 2(A + B)
 # A_L = f_L P_L Ebar_L
-# B_L = -f_L P_L <f> E
+# B_L = -f_L P_L E
 #
 # Exact identity for A error:
 # Ahat_L - A_L = f_L[(Phat_L-P_L) Ebar_L + Phat_L(Ebarhat_L-Ebar_L)].
@@ -113,14 +113,14 @@ function audit(H,m,t,b,X,ratio,ep,shift)
         dA_cond=isempty(im) ? -fL*P*Ebar : fL*Phat*dEbar
         identity_resid=dA-dA_mass-dA_cond
 
-        Bex=-fL*P*ex.Ef*ex.E
-        Bmc=-fL*Phat*sm.Ef*sm.E
+        Bex=-fL*P*ex.E
+        Bmc=-fL*Phat*sm.E
         dB=Bmc-Bex
         dg=2*(dA+dB)
 
         # Split dB exactly into mass and global-factor errors:
-        # Phat*Qhat - P*Q = dP*Q + Phat*dQ, Q=<f>E.
-        Qex=ex.Ef*ex.E; Qmc=sm.Ef*sm.E
+        # Phat*Ehat - P*E = dP*E + Phat*dE.
+        Qex=ex.E; Qmc=sm.E
         dB_mass=-fL*dP*Qex
         dB_global=-fL*Phat*(Qmc-Qex)
 
@@ -135,7 +135,7 @@ function audit(H,m,t,b,X,ratio,ep,shift)
             sd_Ebar=sqrt(max(varL,0.0))
             se_Ebar=sd_Ebar/sqrt(nL)
         end
-        risk_mass=2*abs(fL)*sigP*abs(Ebar)
+        risk_mass=2*abs(fL)*sigP*abs(Ebar-ex.E)
         risk_cond=isfinite(se_Ebar) ? 2*abs(fL)*Phat*se_Ebar : Inf
         risk_quad=sqrt(risk_mass^2 + risk_cond^2)
         oracle_mass=2*abs(dA_mass)

@@ -68,9 +68,9 @@ end
 
 function mc_derivatives(H,m,b,t)
  w=Float64.(b.counts); W=sum(w); f=[GBTQuantum.predict(t,@view b.states[j,:]) for j in axes(b.states,1)]
- el=real.(b.local_energy); Ef=sum(w.*f)/W; E=sum(w.*el)/W
- g=2sum(w.*(f.-Ef).*(el.-E))/W
- f2=sum(w.*f.^2)/W; f2e=sum(w.*f.^2.*el)/W
+ el=real.(b.local_energy); Ef=sum(w .* f)/W; E=sum(w.* el)/W
+ g=2sum(w.*(f .- Ef).*(el .- E))/W
+ f2=sum(w .* f .^ 2)/W; f2e=sum(w .* f .^ 2.* el)/W
  q=sum(w[j]*f[j]*f_local(H,m,t,@view b.states[j,:]) for j in axes(b.states,1))/W
  c=2f2e+2q-4E*f2-4Ef*g
  (g=g,c=c,meanf=Ef)
@@ -86,15 +86,15 @@ end
 function exact_derivatives(H,m,t,X)
  d=size(X,1); A=zeros(d); f=zeros(d)
  for j=1:d; A[j]=GBTQuantum.logamplitude(m,@view X[j,:]); f[j]=GBTQuantum.predict(t,@view X[j,:]); end
- p=exp.(2A.-maximum(2A)); p./=sum(p); el=zeros(d); hf=zeros(d)
+ p=exp.(2 .* A .- maximum(2 .* A)); p ./= sum(p); el=zeros(d); hf=zeros(d)
  for j=1:d
   x=@view X[j,:]; el[j]=GBTQuantum.diagonal(H,x); hf[j]=GBTQuantum.diagonal(H,x)*f[j]
   for i=1:H.N
    k=flip(j,i); r=exp(A[k]-A[j]); el[j]-=H.h*r; hf[j]-=H.h*r*f[k]
   end
  end
- Ef=sum(p.*f); E=sum(p.*el); g=2sum(p.*(f.-Ef).*(el.-E))
- c=2sum(p.*f.^2.*el)+2sum(p.*f.*hf)-4E*sum(p.*f.^2)-4Ef*g
+ Ef=sum(p .* f); E=sum(p.* el); g=2sum(p.*(f .- Ef).*(el .- E))
+ c=2sum(p .* f .^ 2.* el)+2sum(p .* f.* hf)-4E*sum(p .* f .^ 2)-4Ef*g
  (g=g,c=c,meanf=Ef,E=E)
 end
 

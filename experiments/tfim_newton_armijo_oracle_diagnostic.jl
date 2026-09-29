@@ -110,7 +110,7 @@ function run_case(N,ratio)
        armijo_exact=pex,armijo_reweight=prw,armijo_fresh=pf)
      push!(localrows,row); push!(allrows,row)
      @printf(" k=%d eta=% .5f Eex=% .8f %s | Erw=% .8f ESS=%6.1f %s | Efresh=% .8f ± %.2e %s\n",
-      k,eta,Eex,pex ? "PASS":"FAIL",Erw,ess,prw ? "PASS":"FAIL",Ef,se,pf ? "PASS":"FAIL")
+      k,eta,Eex,pex ? "PASS" : "FAIL",Erw,ess,prw ? "PASS" : "FAIL",Ef,se,pf ? "PASS" : "FAIL")
     end
     push!(summaries,(N=N,ratio=ratio,epoch=ep,eta_newton_mc=eta_mc,eta_newton_exact=eta_ex,
       newton_relative_error=abs(eta_mc-eta_ex)/(abs(eta_ex)+eps()),

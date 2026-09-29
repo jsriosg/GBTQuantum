@@ -86,7 +86,7 @@ end
 function exact_derivatives(H,m,t,X)
  d=size(X,1); A=zeros(d); f=zeros(d)
  for j=1:d; A[j]=GBTQuantum.logamplitude(m,@view X[j,:]); f[j]=GBTQuantum.predict(t,@view X[j,:]); end
- p=exp.(2  .*  A  .-  maximum(2  .*  A)); p  ./ = sum(p); el=zeros(d); hf=zeros(d)
+ p=exp.(2  .*  A  .-  maximum(2  .*  A)); p ./= sum(p); el=zeros(d); hf=zeros(d)
  for j=1:d
   x=@view X[j,:]; el[j]=GBTQuantum.diagonal(H,x); hf[j]=GBTQuantum.diagonal(H,x)*f[j]
   for i=1:H.N

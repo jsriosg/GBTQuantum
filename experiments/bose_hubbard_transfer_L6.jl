@@ -219,6 +219,11 @@ function exact_ground_stats(H)
     return (energy=gs.energy,number_variance=nvar,kinetic=kinetic,basis=basis)
 end
 
+function tree_update_stats(t)
+    vals=[n.value for n in t.nodes if n.isleaf]
+    return (maxabs=maximum(abs.(vals)), minval=minimum(vals), maxval=maximum(vals))
+end
+
 function train(H,lambda)
     rng=MersenneTwister(SEED)
     S=initial_samples(rng)
@@ -229,21 +234,54 @@ function train(H,lambda)
         GBTQuantum.bh_sweep!(rng,m,H,S,la)
     end
 
+    peak_raw_leaf=0.0
+    peak_scaled_leaf=0.0
+    maxabs_logamp=maximum(abs.(la))
+
     for ep in 1:EPOCHS
         b=bh_batch(H,m,S)
+        if !isfinite(real(b.energy)) || any(z->!isfinite(real(z)) || !isfinite(imag(z)),b.local_energy)
+            return (model=m,finite=false,failure_epoch=ep,failure_stage="batch",
+                    peak_raw_leaf=peak_raw_leaf,peak_scaled_leaf=peak_scaled_leaf,
+                    maxabs_logamp=maxabs_logamp)
+        end
+
         raw=grow_uncertainty_tree_numeric(b.states,b.targets,b.counts;
             max_depth=DEPTH,min_weight=1.0,min_gain=0.0,lambda=lambda)
         t,_=center_tree(raw,b.states,b.counts)
+        st=tree_update_stats(t)
+        peak_raw_leaf=max(peak_raw_leaf,st.maxabs)
+        peak_scaled_leaf=max(peak_scaled_leaf,ETA*st.maxabs)
+
         push!(m.logamp.trees,scaled_tree(t,ETA))
         @inbounds for r in 1:M
             la[r]=GBTQuantum.logamplitude(m,@view S[r,:])
         end
+        finite_after_update=all(isfinite,la)
+        finite_after_update && (maxabs_logamp=max(maxabs_logamp,maximum(abs.(la))))
+        if !finite_after_update
+            @printf("  FAILURE U/J=%.1f lambda=%.1f epoch=%d stage=tree_update raw|maxleaf|=%.3e scaled|maxleaf|=%.3e\n",
+                    H.U/H.J,lambda,ep,st.maxabs,ETA*st.maxabs)
+            return (model=m,finite=false,failure_epoch=ep,failure_stage="tree_update",
+                    peak_raw_leaf=peak_raw_leaf,peak_scaled_leaf=peak_scaled_leaf,
+                    maxabs_logamp=maxabs_logamp)
+        end
+
         for _ in 1:SWEEPS_PER_EPOCH
             GBTQuantum.bh_sweep!(rng,m,H,S,la)
         end
-        any(!isfinite,la) && error("non-finite log amplitudes U/J=$(H.U/H.J) lambda=$lambda epoch=$ep")
+        if any(!isfinite,la)
+            @printf("  FAILURE U/J=%.1f lambda=%.1f epoch=%d stage=sampling raw|maxleaf|=%.3e scaled|maxleaf|=%.3e\n",
+                    H.U/H.J,lambda,ep,st.maxabs,ETA*st.maxabs)
+            return (model=m,finite=false,failure_epoch=ep,failure_stage="sampling",
+                    peak_raw_leaf=peak_raw_leaf,peak_scaled_leaf=peak_scaled_leaf,
+                    maxabs_logamp=maxabs_logamp)
+        end
+        maxabs_logamp=max(maxabs_logamp,maximum(abs.(la)))
     end
-    return m
+    return (model=m,finite=true,failure_epoch=0,failure_stage="none",
+            peak_raw_leaf=peak_raw_leaf,peak_scaled_leaf=peak_scaled_leaf,
+            maxabs_logamp=maxabs_logamp)
 end
 
 function writecsv(path,rows)
@@ -272,21 +310,40 @@ function main()
                 U/J,gs.energy,gs.number_variance,gs.kinetic)
 
         for lambda in LAMBDAS
-            m=train(H,lambda)
-            s=exact_model_stats(m,H,gs.basis)
-            row=(L=L,Nbos=NBOS,hilbert=size(gs.basis,1),U_over_J=U/J,
-                 lambda=lambda,seed=SEED,Egs=gs.energy,E_final=s.energy,
-                 energy_error=s.energy-gs.energy,
-                 number_variance_exact=gs.number_variance,
-                 number_variance_model=s.number_variance,
-                 number_variance_abs_error=abs(s.number_variance-gs.number_variance),
-                 kinetic_exact=gs.kinetic,kinetic_model=s.kinetic,
-                 kinetic_abs_error=abs(s.kinetic-gs.kinetic),
-                 exact_model_variance=s.variance)
-            push!(rows,row)
-            @printf(" lambda=%3.1f Eerr=% .3e |dVar(n)|=% .3e |dK|=% .3e Var(E_loc)=% .3e\n",
-                    lambda,row.energy_error,row.number_variance_abs_error,
-                    row.kinetic_abs_error,row.exact_model_variance)
+            tr=train(H,lambda)
+            if tr.finite
+                s=exact_model_stats(tr.model,H,gs.basis)
+                row=(L=L,Nbos=NBOS,hilbert=size(gs.basis,1),U_over_J=U/J,
+                     lambda=lambda,seed=SEED,finite=true,failure_epoch=0,failure_stage="none",
+                     peak_raw_leaf=tr.peak_raw_leaf,peak_scaled_leaf=tr.peak_scaled_leaf,
+                     maxabs_logamp=tr.maxabs_logamp,
+                     Egs=gs.energy,E_final=s.energy,energy_error=s.energy-gs.energy,
+                     number_variance_exact=gs.number_variance,
+                     number_variance_model=s.number_variance,
+                     number_variance_abs_error=abs(s.number_variance-gs.number_variance),
+                     kinetic_exact=gs.kinetic,kinetic_model=s.kinetic,
+                     kinetic_abs_error=abs(s.kinetic-gs.kinetic),
+                     exact_model_variance=s.variance)
+                push!(rows,row)
+                @printf(" lambda=%3.1f Eerr=% .3e |dVar(n)|=% .3e |dK|=% .3e Var(E_loc)=% .3e peak|leaf|=% .3e max|A|=% .3e\n",
+                        lambda,row.energy_error,row.number_variance_abs_error,
+                        row.kinetic_abs_error,row.exact_model_variance,
+                        row.peak_raw_leaf,row.maxabs_logamp)
+            else
+                nan=NaN
+                row=(L=L,Nbos=NBOS,hilbert=size(gs.basis,1),U_over_J=U/J,
+                     lambda=lambda,seed=SEED,finite=false,failure_epoch=tr.failure_epoch,
+                     failure_stage=tr.failure_stage,peak_raw_leaf=tr.peak_raw_leaf,
+                     peak_scaled_leaf=tr.peak_scaled_leaf,maxabs_logamp=tr.maxabs_logamp,
+                     Egs=gs.energy,E_final=nan,energy_error=nan,
+                     number_variance_exact=gs.number_variance,
+                     number_variance_model=nan,number_variance_abs_error=nan,
+                     kinetic_exact=gs.kinetic,kinetic_model=nan,kinetic_abs_error=nan,
+                     exact_model_variance=nan)
+                push!(rows,row)
+                @printf(" lambda=%3.1f FAILED epoch=%d stage=%s peak|leaf|=% .3e max finite |A|=% .3e\n",
+                        lambda,tr.failure_epoch,tr.failure_stage,tr.peak_raw_leaf,tr.maxabs_logamp)
+            end
         end
     end
 

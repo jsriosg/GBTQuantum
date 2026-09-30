@@ -17,7 +17,7 @@ const NBOS = 6
 const J = 1.0
 const U_VALUES = [1.0, 3.3, 6.0]
 const LAMBDAS = [0.0, 1.0]
-const SEED = 1234
+const SEEDS = [1234,2345,3456,4567,5678]
 
 # Frozen TFIM production hyperparameters.
 const M = 512
@@ -224,8 +224,8 @@ function tree_update_stats(t)
     return (maxabs=maximum(abs.(vals)), minval=minimum(vals), maxval=maximum(vals))
 end
 
-function train(H,lambda)
-    rng=MersenneTwister(SEED)
+function train(H,lambda,seed)
+    rng=MersenneTwister(seed)
     S=initial_samples(rng)
     m=GBTQuantum.LogGBState(logamp_bias=0.0,phase_bias=0.0,use_phase=false)
     la=[GBTQuantum.logamplitude(m,@view S[r,:]) for r in 1:M]
@@ -298,7 +298,7 @@ function main()
     println("="^112)
     println("BOSE-HUBBARD FIRST GBT-VMC TRANSFER TEST")
     println("L=$L Nbos=$NBOS Hilbert=$(binomial(NBOS+L-1,NBOS)) J=$J U/J=$U_VALUES")
-    println("lambda=$LAMBDAS seed=$SEED M=$M depth=$DEPTH epochs=$EPOCHS eta=$ETA")
+    println("lambda=$LAMBDAS seeds=$SEEDS M=$M depth=$DEPTH epochs=$EPOCHS eta=$ETA")
     println("Fixed-N, periodic, mu=0. Exact diagonalization is evaluation-only.")
     println("="^112)
 
@@ -309,12 +309,12 @@ function main()
         @printf("\nU/J=%4.1f exact E=% .10f  number_var=% .8f  kinetic=% .8f\n",
                 U/J,gs.energy,gs.number_variance,gs.kinetic)
 
-        for lambda in LAMBDAS
-            tr=train(H,lambda)
+        for lambda in LAMBDAS, seed in SEEDS
+            tr=train(H,lambda,seed)
             if tr.finite
                 s=exact_model_stats(tr.model,H,gs.basis)
                 row=(L=L,Nbos=NBOS,hilbert=size(gs.basis,1),U_over_J=U/J,
-                     lambda=lambda,seed=SEED,finite=true,failure_epoch=0,failure_stage="none",
+                     lambda=lambda,seed=seed,finite=true,failure_epoch=0,failure_stage="none",
                      peak_raw_leaf=tr.peak_raw_leaf,peak_scaled_leaf=tr.peak_scaled_leaf,
                      maxabs_logamp=tr.maxabs_logamp,
                      Egs=gs.energy,E_final=s.energy,energy_error=s.energy-gs.energy,
@@ -332,7 +332,7 @@ function main()
             else
                 nan=NaN
                 row=(L=L,Nbos=NBOS,hilbert=size(gs.basis,1),U_over_J=U/J,
-                     lambda=lambda,seed=SEED,finite=false,failure_epoch=tr.failure_epoch,
+                     lambda=lambda,seed=seed,finite=false,failure_epoch=tr.failure_epoch,
                      failure_stage=tr.failure_stage,peak_raw_leaf=tr.peak_raw_leaf,
                      peak_scaled_leaf=tr.peak_scaled_leaf,maxabs_logamp=tr.maxabs_logamp,
                      Egs=gs.energy,E_final=nan,energy_error=nan,
@@ -348,7 +348,7 @@ function main()
     end
 
     dir=joinpath(@__DIR__,"results"); mkpath(dir)
-    path=joinpath(dir,"bose_hubbard_transfer_L6.csv")
+    path=joinpath(dir,"bose_hubbard_transfer_L6_multiseed.csv")
     writecsv(path,rows)
     println("\nResults written to $path")
 end

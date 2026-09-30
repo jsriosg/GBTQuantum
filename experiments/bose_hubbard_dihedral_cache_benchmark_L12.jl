@@ -634,7 +634,9 @@ function main()
     path=joinpath(dir,"bose_hubbard_dihedral_cache_benchmark_L12.csv")
     writecsv(path,bench)
     println("\nBenchmark results written to $path")
-endend
+end
+
+end
 
 if abspath(PROGRAM_FILE)==@__FILE__
     BoseHubbardDihedralCacheBenchmark.main()

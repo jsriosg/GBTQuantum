@@ -186,7 +186,7 @@ end
 
 @inline function model_logamp(m,x,mode)
     z=feature_state(x,mode)
-    return m.logamp.bias + sum(GBTQuantum.predict(t,z) for t in m.logamp.trees)
+    return m.logamp.bias + sum((GBTQuantum.predict(t,z) for t in m.logamp.trees); init=0.0)
 end
 
 function local_energy_mode(H,m,n,mode)

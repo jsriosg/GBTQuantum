@@ -9,9 +9,8 @@ using Statistics
 using LinearAlgebra
 using Printf
 
-# First transfer/smoke test.  These points bracket the thermodynamic 1D
-# unit-filling BKT region (~3.3) but L=6 is finite, so none is labelled
-# a finite-size "critical point".
+# Size-scaling study at unit filling. U/J=1 and 6 probe the two established
+# Bose-Hubbard regimes without assigning a finite-size critical point.
 const L_VALUES = [8,10,12]
 const L = Ref(8)
 const NBOS = Ref(8)
@@ -20,7 +19,7 @@ const U_VALUES = [1.0, 6.0]
 const LAMBDA = 4.0
 const SEEDS = [1234,2345,3456]
 
-# Frozen TFIM production hyperparameters.
+# Frozen Bose-Hubbard symmetry-aware settings established by the L=8 studies.
 const SAMPLE_SIZES = [1024]
 const EPOCHS = 400
 const CHECKPOINTS = Set([50,100,150,250,400])
@@ -496,7 +495,7 @@ function writecsv(path,rows)
     end
 end
 
-function mc_model_stats(m,H,mode; M_eval=4096, burn=100, sweeps=4, seed=987654)
+function mc_model_stats(m,H,mode; M_eval=1024, burn=20, sweeps=2, seed=987654)
     rng=MersenneTwister(seed)
     S=initial_samples(rng,M_eval)
     la=[model_logamp(m,@view(S[r,:]),mode) for r in 1:M_eval]

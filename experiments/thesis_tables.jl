@@ -49,8 +49,48 @@ function write_bh_symmetry()
   println(io,raw"\hline"); println(io,raw"\end{tabular}")
  end
 end
+
+function write_tf_regularization()
+ a=readcsv("tfim_final_regularization_observable_comparison.csv")
+ open(joinpath(OUT,"tfim_regularization_summary.tex"),"w") do io
+  println(io,raw"\\begin{tabular}{cccccc}"); println(io,raw"\\hline")
+  println(io,raw"$J/h$ & $N$ & $\\lambda$ & $|\\Delta E|$ & $|\\Delta m_z^2|$ & $|\\Delta m_x|$", " ", ROW)
+  println(io,raw"\\hline")
+  for r in (0.5,1.0,2.0), N in (8,10,12,14), lam in (0.0,1.0)
+   q=[x for x in a if x.ratio==r && x.N==N && x.lambda==lam]
+   @assert length(q)==5 "Expected five seeds for ratio=$r N=$N lambda=$lam"
+   println(io,@sprintf("%.1f & %d & %.0f & %s & %s & %s",
+    r,N,lam,
+    pm(abs.([x.energy_error for x in q])),
+    pm([x.mz2_abs_error for x in q]),
+    pm([x.mx_abs_error for x in q])), " ", ROW)
+  end
+  println(io,raw"\\hline"); println(io,raw"\\end{tabular}")
+ end
+
+ open(joinpath(OUT,"tfim_regularization_paired_wins.tex"),"w") do io
+  println(io,raw"\\begin{tabular}{ccccc}"); println(io,raw"\\hline")
+  println(io,raw"$J/h$ & Energy & $|m_z|$ & $m_z^2$ & $m_x$", " ", ROW)
+  println(io,raw"\\hline")
+  for r in (0.5,1.0,2.0)
+   wins=Int[]
+   for field in (:energy_error,:abs_mz_abs_error,:mz2_abs_error,:mx_abs_error)
+    n=0
+    for N in (8,10,12,14), seed in sort(unique(x.seed for x in a if x.ratio==r && x.N==N))
+     q0=[x for x in a if x.ratio==r && x.N==N && x.seed==seed && x.lambda==0.0]
+     q1=[x for x in a if x.ratio==r && x.N==N && x.seed==seed && x.lambda==1.0]
+     n += abs(getproperty(only(q1),field)) < abs(getproperty(only(q0),field))
+    end
+    push!(wins,n)
+   end
+   println(io,@sprintf("%.1f & %d/20 & %d/20 & %d/20 & %d/20",r,wins...), " ", ROW)
+  end
+  println(io,raw"\\hline"); println(io,raw"\\end{tabular}")
+ end
+end
+
 function main()
- mkpath(OUT); write_tf_z2(); write_bh_transfer(); write_bh_symmetry()
+ mkpath(OUT); write_tf_regularization(); write_tf_z2(); write_bh_transfer(); write_bh_symmetry()
  println("Wrote thesis tables to ",OUT)
 end
 end

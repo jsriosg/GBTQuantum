@@ -7,7 +7,7 @@ function readcsv(name)
  [NamedTuple{Tuple(n)}(Tuple(parsev.(split(x,',')))) for x in l[2:end] if !isempty(strip(x))]
 end
 pm(v)=@sprintf("%.3e \\pm %.1e",mean(v),std(v))
-const ROW = raw"\\"
+const ROW = repeat(string(Char(92)), 2)
 function write_tf_z2()
  a=readcsv("tfim_z2_symmetry_comparison.csv")
  open(joinpath(OUT,"tfim_z2_summary.tex"),"w") do io

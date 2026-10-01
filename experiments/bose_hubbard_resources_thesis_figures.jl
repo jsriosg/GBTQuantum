@@ -28,7 +28,7 @@ function main()
  long=readcsv("bose_hubbard_long_horizon_L8.csv")
  f=Figure(size=(1050,850))
  # (a) sample scaling: final runs, original vs regularized
- ax=Axis(f[1,1],title="(a) Sample size",ylabel="Mean absolute energy error",yscale=log10,
+ ax=Axis(f[1,1],title="(a) Sample size",xlabel="Monte Carlo samples M",ylabel="Mean absolute energy error",yscale=log10,
          xscale=log2,xticks=([256,512,1024,2048],["256","512","1024","2048"]))
  for (j,U) in enumerate((1.0,6.0))
   for (k,lam) in enumerate((0.0,1.0))
@@ -41,8 +41,14 @@ function main()
   end
  end
  axislegend(ax,position=:lb)
+ # Explicitly mark all-failed strong-coupling unregularized settings.
+ for (i,M) in enumerate((256,512,1024,2048))
+  q=[x for x in sample if x.U_over_J==6.0 && x.lambda==0.0 && x.M==M]
+  nf=count(x->!x.finite,q)
+  nf==length(q) && text!(ax,M,2.5,text="all failed",align=(:center,:center),fontsize=11,color=Makie.wong_colors()[2])
+ end
  # (b) lambda at eta=.05, epoch400
- ax=Axis(f[1,2],title="(b) Regularization strength",yscale=log10,
+ ax=Axis(f[1,2],title="(b) Regularization strength",yscale=log10,xlabel="Regularization strength λ",
          xticks=([0.25,0.5,1,2,4],["0.25","0.5","1","2","4"]))
  for (j,U) in enumerate((1.0,6.0))
   xy=series(hyper,U,:lambda,[0.25,0.5,1.0,2.0,4.0],filt=x->x.eta==0.05 && x.epoch==400)

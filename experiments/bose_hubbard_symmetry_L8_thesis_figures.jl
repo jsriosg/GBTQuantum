@@ -19,10 +19,10 @@ function main()
  trans=readcsv("bose_hubbard_translation_symmetry_L8.csv")
  dih=readcsv("bose_hubbard_fast_dihedral_L8.csv")
  cost=readcsv("bose_hubbard_dihedral_cost_grid_L8.csv")
- f=Figure(size=(1050,760)); colors=Makie.wong_colors()
+ f=Figure(size=(1200,700)); colors=Makie.wong_colors()
  # Panel a: same computational budget, raw -> translation -> dihedral
  ax=Axis(f[1,1],title="(a) Symmetry at fixed resources",ylabel="Mean absolute energy error",yscale=log10,
-  xticks=([1,2,3],["Raw","Translation","Dihedral"]))
+  xticks=([1,2,3],["Raw","Translation","Dihedral"]),xticklabelrotation=pi/10)
  for (j,U) in enumerate((1.0,6.0))
   vals=Float64[]
   for sym in ("raw","translation_canonical","dihedral_canonical")
@@ -47,7 +47,13 @@ function main()
   end
   lines!(ax,1:4,vals,color=colors[j]); scatter!(ax,1:4,vals,color=colors[j],markersize=12,label="U/J=$(Int(U))")
  end
+ # Raw fixed-budget references make the resource comparison explicit.
+ for (j,U) in enumerate((1.0,6.0))
+  rawref=groupmean(trans,U=U,symmetry="raw",M=1024,depth=6)
+  hlines!(ax,[rawref],color=(colors[j],0.55),linestyle=:dash,linewidth=1.5)
+ end
  axislegend(ax,position=:rt)
+ colsize!(f.layout,1,Relative(0.5)); colsize!(f.layout,2,Relative(0.5))
  Label(f[0,1:2],"Bose–Hubbard L = N = 8: exploiting spatial symmetry",fontsize=20,font=:bold)
  Label(f[2,1],"Representation",fontsize=16)
  Label(f[2,2],"Monte Carlo samples M and tree depth d",fontsize=16)

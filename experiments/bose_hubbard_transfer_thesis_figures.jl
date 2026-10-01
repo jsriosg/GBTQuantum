@@ -24,12 +24,13 @@ function main()
     scatter!(ax1,[i+dx],[mean(r.energy_error for r in finite)],color=colors[j],marker=marker,markersize=16,label=i==1 ? label : nothing)
    end
    failed=count(r->!r.finite,q)
-   failed>0 && text!(ax1,i+dx,0.20,text="×$(failed)",align=(:center,:center),fontsize=16,color=colors[j])
+   failed>0 && text!(ax1,i+dx,0.14,text="$(failed) failed",align=(:center,:center),fontsize=14,color=colors[j])
    scatter!(ax2,fill(i+dx,length(q)),[r.peak_raw_leaf for r in q],color=(colors[j],0.45),marker=marker,markersize=9)
-   scatter!(ax2,[i+dx],[median(r.peak_raw_leaf for r in q)],color=colors[j],marker=marker,markersize=16)
+   scatter!(ax2,[i+dx],[median(r.peak_raw_leaf for r in q)],color=colors[j],marker=marker,markersize=16,label=i==1 ? label : nothing)
   end
  end
  axislegend(ax1,position=:lt)
+ axislegend(ax2,position=:lt)
  Label(f[2,1:2],"Interaction ratio U/J",fontsize=18)
  save(joinpath(OUTDIR,"bose_hubbard_transfer_regularization_L6.pdf"),f)
  save(joinpath(OUTDIR,"bose_hubbard_transfer_regularization_L6.png"),f,px_per_unit=2)

@@ -32,14 +32,15 @@ subset(s,ratio,lambda)=sort([r for r in s if r.ratio==ratio && r.lambda==lambda]
 
 function fig_energy(s, rows)
  f=Figure(size=(900,900))
+ colors=Makie.wong_colors()[[1,2]]
  for (k,r) in enumerate((0.5,1.0,2.0))
   ax=Axis(f[k,1],xlabel=k==3 ? "System size N" : "",ylabel="Absolute energy error",
    title="J/h = $(r)",yscale=log10,xticks=[8,10,12,14])
-  for (lam,label,marker) in ((0.0,"Original GBT-VMC",:circle),(1.0,"Regularized (λ = 1)",:rect))
+  for (j,(lam,label,marker)) in enumerate(((0.0,"Original GBT-VMC",:circle),(1.0,"Regularized (λ = 1)",:rect)))
    q=subset(s,r,lam); N=[x.N for x in q]; y=[x.energy_mean for x in q]; sd=[x.energy_sd for x in q]
    raw=[z for z in rows if z.ratio==r && z.lambda==lam]
-   scatter!(ax,[z.N for z in raw],[z.energy_error for z in raw],marker=marker,markersize=6,alpha=0.28)
-   lines!(ax,N,y); scatter!(ax,N,y,marker=marker,markersize=11,label=label)
+   scatter!(ax,[z.N for z in raw],[z.energy_error for z in raw],marker=marker,markersize=6,alpha=0.25,color=(colors[j],0.35))
+   lines!(ax,N,y,color=colors[j]); scatter!(ax,N,y,marker=marker,markersize=11,label=label,color=colors[j])
   end
   k==1 && axislegend(ax,position=:lt)
  end
@@ -49,18 +50,20 @@ end
 
 function fig_observables(s, rows)
  f=Figure(size=(1050,850))
+ colors=Makie.wong_colors()[[1,2]]
  metrics=[(:absmz_mean,:absmz_sd,L"|\Delta\langle |m_z|\rangle|"),
           (:mz2_mean,:mz2_sd,L"|\Delta\langle m_z^2\rangle|"),
           (:mx_mean,:mx_sd,L"|\Delta\langle m_x\rangle|")]
  for (col,(m,sd,ylab)) in enumerate(metrics), (row,r) in enumerate((1.0,2.0))
-  ax=Axis(f[row,col],xlabel=row==2 ? "N" : "",ylabel=ylab,title="J/h = $(r)",
+  ax=Axis(f[row,col],xlabel=row==2 ? "System size N" : "",ylabel=ylab,
+          title=col==2 ? "J/h = $(r)" : "",
           yscale=log10,xticks=[8,10,12,14])
-  for (lam,label,marker) in ((0.0,"λ = 0",:circle),(1.0,"λ = 1",:rect))
+  for (j,(lam,label,marker)) in enumerate(((0.0,"λ = 0",:circle),(1.0,"λ = 1",:rect)))
    q=subset(s,r,lam); N=[x.N for x in q]; y=[getproperty(x,m) for x in q]; e=[getproperty(x,sd) for x in q]
    raw=[z for z in rows if z.ratio==r && z.lambda==lam]
    rawsym = m==:absmz_mean ? :abs_mz_abs_error : m==:mz2_mean ? :mz2_abs_error : :mx_abs_error
-   scatter!(ax,[z.N for z in raw],[getproperty(z,rawsym) for z in raw],marker=marker,markersize=5,alpha=0.25)
-   lines!(ax,N,y); scatter!(ax,N,y,marker=marker,markersize=10,label=label)
+   scatter!(ax,[z.N for z in raw],[getproperty(z,rawsym) for z in raw],marker=marker,markersize=5,alpha=0.25,color=(colors[j],0.35))
+   lines!(ax,N,y,color=colors[j]); scatter!(ax,N,y,marker=marker,markersize=10,label=label,color=colors[j])
   end
   row==1 && col==1 && axislegend(ax,position=:lt)
  end

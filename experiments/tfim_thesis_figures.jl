@@ -1,5 +1,5 @@
 module TFIMThesisFigures
-using CSV, DataFrames, Statistics, Printf, CairoMakie
+using CSV, DataFrames, Statistics, Printf, CairoMakie, LaTeXStrings
 
 const INPUT = joinpath(@__DIR__,"results","tfim_final_regularization_observable_comparison.csv")
 const OUTDIR = joinpath(@__DIR__,"results","thesis_figures")
@@ -52,17 +52,22 @@ end
 function latex_table(s)
  path=joinpath(OUTDIR,"tfim_regularization_summary.tex")
  open(path,"w") do io
-  println(io,"\\begin{table}[htbp]\n\\centering")
-  println(io,"\\caption{Final TFIM comparison between the original ($\\lambda=0$) and uncertainty-regularized ($\\lambda=1$) GBT-VMC models. Values are mean $\\pm$ standard deviation over five seeds.}")
-  println(io,"\\label{tab:tfim_regularization_summary}")
-  println(io,"\\begin{tabular}{cccrrr}\n\\toprule")
-  println(io,"$N$ & $J/h$ & $\\lambda$ & $\\Delta E$ & $|\\Delta\\langle m_z^2\\rangle|$ & $|\\Delta\\langle m_x\\rangle|$ \\\\")
-  println(io,"\\midrule")
+  println(io,raw"\begin{table}[htbp]")
+  println(io,raw"\centering")
+  println(io,raw"\caption{Final TFIM comparison between the original ($\lambda=0$) and uncertainty-regularized ($\lambda=1$) GBT-VMC models. Values are mean $\pm$ standard deviation over five seeds.}")
+  println(io,raw"\label{tab:tfim_regularization_summary}")
+  println(io,raw"\begin{tabular}{cccrrr}")
+  println(io,raw"\toprule")
+  println(io,raw"$N$ & $J/h$ & $\lambda$ & $\Delta E$ & $|\Delta\langle m_z^2\rangle|$ & $|\Delta\langle m_x\rangle|$ \\")
+  println(io,raw"\midrule")
   for r in eachrow(sort(s,[:ratio,:N,:lambda]))
-   @printf(io,"%d & %.1f & %.0f & %.3e $\\pm$ %.1e & %.3e $\\pm$ %.1e & %.3e $\\pm$ %.1e \\\\\n",
+   row=@sprintf("%d & %.1f & %.0f & %.3e \\pm %.1e & %.3e \\pm %.1e & %.3e \\pm %.1e",
     r.N,r.ratio,r.lambda,r.energy_mean,r.energy_sd,r.mz2_mean,r.mz2_sd,r.mx_mean,r.mx_sd)
+   println(io,row * raw" \\")
   end
-  println(io,"\\bottomrule\n\\end{tabular}\n\\end{table}")
+  println(io,raw"\bottomrule")
+  println(io,raw"\end{tabular}")
+  println(io,raw"\end{table}")
  end
 end
 

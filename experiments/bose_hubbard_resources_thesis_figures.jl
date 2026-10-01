@@ -6,7 +6,10 @@ function readcsv(name)
  l=readlines(joinpath(R,name)); n=Symbol.(split(l[1],','))
  [NamedTuple{Tuple(n)}(Tuple(parsev.(split(x,',')))) for x in l[2:end] if !isempty(strip(x))]
 end
-avg(q,s)=mean(getproperty(x,s) for x in q if x.finite)
+function avg(q,s)
+ v=[getproperty(x,s) for x in q if x.finite]
+ isempty(v) ? NaN : mean(v)
+end
 function series(rows,U,key,vals; filt=x->true)
  [(v,avg([x for x in rows if x.U_over_J==U && getproperty(x,key)==v && filt(x)],:energy_error)) for v in vals]
 end
@@ -31,8 +34,9 @@ function main()
   for (k,lam) in enumerate((0.0,1.0))
    xy=series(sample,U,:M,[256,512,1024,2048],filt=x->x.lambda==lam)
    col=Makie.wong_colors()[j]; marker=lam==0 ? :circle : :rect
-   lines!(ax,first.(xy),last.(xy),color=col,linestyle=lam==0 ? :dash : :solid)
-   scatter!(ax,first.(xy),last.(xy),color=col,marker=marker,markersize=10,
+   good=[p for p in xy if isfinite(last(p))]
+   lines!(ax,first.(good),last.(good),color=col,linestyle=lam==0 ? :dash : :solid)
+   scatter!(ax,first.(good),last.(good),color=col,marker=marker,markersize=10,
     label="U/J=$(Int(U)), λ=$(Int(lam))")
   end
  end

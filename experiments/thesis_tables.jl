@@ -6,7 +6,17 @@ function readcsv(name)
  l=readlines(joinpath(R,name)); n=Symbol.(split(l[1],','))
  [NamedTuple{Tuple(n)}(Tuple(parsev.(split(x,',')))) for x in l[2:end] if !isempty(strip(x))]
 end
-pm(v)=@sprintf("%.3e \\pm %.1e",mean(v),std(v))
+function sci(x; digits=3)
+ s=@sprintf("%.*e",digits,x); a,b=split(s,"e"); n=parse(Int,b)
+ return "\$" * a * "\\times 10^{" * string(n) * "}\$"
+end
+function pm(v)
+ m=mean(v); s=std(v)
+ sm=@sprintf("%.3e",m); ss=@sprintf("%.1e",s)
+ am,bm=split(sm,"e"); as,bs=split(ss,"e")
+ return "\$" * am * "\\times 10^{" * string(parse(Int,bm)) * "} \\pm " *
+        as * "\\times 10^{" * string(parse(Int,bs)) * "}\$"
+end
 const ROW = repeat(string(Char(92)), 2)
 function write_tf_z2()
  a=readcsv("tfim_z2_symmetry_comparison.csv")

@@ -30,14 +30,14 @@ function summary(rows)
 end
 subset(s,ratio,lambda)=sort([r for r in s if r.ratio==ratio && r.lambda==lambda],by=r->r.N)
 
-function fig_energy(s)
+function fig_energy(s, rows)
  f=Figure(size=(900,900))
  for (k,r) in enumerate((0.5,1.0,2.0))
   ax=Axis(f[k,1],xlabel=k==3 ? "System size N" : "",ylabel="Absolute energy error",
    title="J/h = $(r)",yscale=log10,xticks=[8,10,12,14])
   for (lam,label,marker) in ((0.0,"Original GBT-VMC",:circle),(1.0,"Regularized (λ = 1)",:rect))
    q=subset(s,r,lam); N=[x.N for x in q]; y=[x.energy_mean for x in q]; sd=[x.energy_sd for x in q]
-   errorbars!(ax,N,y,sd); lines!(ax,N,y); scatter!(ax,N,y,marker=marker,label=label)
+   raw=[z for z in rows if z.ratio==r && z.lambda==lam]\n   scatter!(ax,[z.N for z in raw],[z.energy_error for z in raw],marker=marker,markersize=6,alpha=0.28)\n   lines!(ax,N,y); scatter!(ax,N,y,marker=marker,markersize=11,label=label)
   end
   k==1 && axislegend(ax,position=:lt)
  end
@@ -45,7 +45,7 @@ function fig_energy(s)
  save(joinpath(OUTDIR,"tfim_regularization_energy_scaling.png"),f,px_per_unit=2)
 end
 
-function fig_observables(s)
+function fig_observables(s, rows)
  f=Figure(size=(1050,850))
  metrics=[(:absmz_mean,:absmz_sd,L"|\Delta\langle |m_z|\rangle|"),
           (:mz2_mean,:mz2_sd,L"|\Delta\langle m_z^2\rangle|"),
@@ -55,7 +55,7 @@ function fig_observables(s)
           yscale=log10,xticks=[8,10,12,14])
   for (lam,label,marker) in ((0.0,"λ = 0",:circle),(1.0,"λ = 1",:rect))
    q=subset(s,r,lam); N=[x.N for x in q]; y=[getproperty(x,m) for x in q]; e=[getproperty(x,sd) for x in q]
-   errorbars!(ax,N,y,e); lines!(ax,N,y); scatter!(ax,N,y,marker=marker,label=label)
+   raw=[z for z in rows if z.ratio==r && z.lambda==lam]\n   rawsym = m==:absmz_mean ? :abs_mz_abs_error : m==:mz2_mean ? :mz2_abs_error : :mx_abs_error\n   scatter!(ax,[z.N for z in raw],[getproperty(z,rawsym) for z in raw],marker=marker,markersize=5,alpha=0.25)\n   lines!(ax,N,y); scatter!(ax,N,y,marker=marker,markersize=10,label=label)
   end
   row==1 && col==1 && axislegend(ax,position=:lt)
  end
@@ -94,7 +94,7 @@ end
 function main()
  mkpath(OUTDIR); rows=readcsv(INPUT); @assert length(rows)==120
  s=summary(rows); writecsv(joinpath(OUTDIR,"tfim_regularization_summary.csv"),s)
- fig_energy(s); fig_observables(s); latex_table(s); paired_table(rows)
+ fig_energy(s,rows); fig_observables(s,rows); latex_table(s); paired_table(rows)
  println("Thesis outputs written to: ",OUTDIR)
 end
 end

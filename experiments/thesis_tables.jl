@@ -53,9 +53,9 @@ end
 function write_tf_regularization()
  a=readcsv("tfim_final_regularization_observable_comparison.csv")
  open(joinpath(OUT,"tfim_regularization_summary.tex"),"w") do io
-  println(io,raw"\\begin{tabular}{cccccc}"); println(io,raw"\\hline")
-  println(io,raw"$J/h$ & $N$ & $\\lambda$ & $|\\Delta E|$ & $|\\Delta m_z^2|$ & $|\\Delta m_x|$", " ", ROW)
-  println(io,raw"\\hline")
+  println(io,raw"\begin{tabular}{cccccc}"); println(io,raw"\hline")
+  println(io,raw"$J/h$ & $N$ & $\lambda$ & $|\Delta E|$ & $|\Delta m_z^2|$ & $|\Delta m_x|$", " ", ROW)
+  println(io,raw"\hline")
   for r in (0.5,1.0,2.0), N in (8,10,12,14), lam in (0.0,1.0)
    q=[x for x in a if x.ratio==r && x.N==N && x.lambda==lam]
    @assert length(q)==5 "Expected five seeds for ratio=$r N=$N lambda=$lam"
@@ -65,11 +65,11 @@ function write_tf_regularization()
     pm([x.mz2_abs_error for x in q]),
     pm([x.mx_abs_error for x in q])), " ", ROW)
   end
-  println(io,raw"\\hline"); println(io,raw"\\end{tabular}")
+  println(io,raw"\hline"); println(io,raw"\end{tabular}")
  end
 
  open(joinpath(OUT,"tfim_regularization_paired_wins.tex"),"w") do io
-  println(io,raw"\\begin{tabular}{ccccc}"); println(io,raw"\\hline")
+  println(io,raw"\begin{tabular}{ccccc}"); println(io,raw"\hline")
   println(io,raw"$J/h$ & Energy & $|m_z|$ & $m_z^2$ & $m_x$", " ", ROW)
   println(io,raw"\\hline")
   for r in (0.5,1.0,2.0)
